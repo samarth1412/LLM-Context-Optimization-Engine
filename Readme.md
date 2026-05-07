@@ -1,7 +1,7 @@
 # ContextFlow AI — LLM Context Engineering Platform
 **LLM Context Engineering Platform for Token-Efficient Memory, Semantic Retrieval, and Long-Session Optimization**
 
-ContextFlow AI is an AI infrastructure project for **evaluating and optimizing how long-running LLM applications manage context, memory, token usage, and cost**. It is designed as an engineering-grade portfolio piece for 2026-era LLM roles: measurable token/cost tradeoffs, memory strategy comparisons, and instrumentation for long-session behavior.
+ContextFlow AI is an AI infrastructure project for **evaluating and optimizing how long-running LLM applications manage context, memory, token usage, and cost**. It is designed for measurable token/cost tradeoffs, memory strategy comparisons, and instrumentation for long-session behavior.
 
 **This is not a chatbot product.** It’s a context optimization engine and research harness that compares strategies for keeping LLM sessions coherent and affordable as histories grow.
 
@@ -178,21 +178,6 @@ Planned evaluation directions (future work):
 
 ---
 
-## Dashboard
-The dashboard is a lightweight UI for:
-- Sending prompts (with selectable models)
-- Inspecting **context preview** (what the model saw)
-- Viewing session **token/cost accounting**
-- Viewing **benchmark-derived charts** (via `/api/benchmark`) and **summary calls over time**
-
-Screenshots (placeholders):
-
-![Dashboard](docs/screenshots/dashboard.png)
-
-![Benchmark Results](docs/screenshots/benchmark.png)
-
----
-
 ## Tech Stack
 - **Python** (FastAPI, requests)
 - **FastAPI + Uvicorn** (API + local server)
@@ -266,19 +251,13 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 ## Results
 This repo is set up to generate **real artifacts** (`results/benchmark.*`) that you can embed into the README and dashboard.
 
-- Run `python benchmark.py --json --export`
-- Commit `results/benchmark.png` and include it under `docs/screenshots/benchmark.png` if you want a stable README preview.
-
-### Are the results consistent with our expectations?
-Yes, for this synthetic workload the ordering matches the intended tradeoffs:
-
 - **Full history** is the most expensive because each request grows with the entire conversation.
 - **Sliding window** is the cheapest because it caps context length (but it would forget older facts by design).
 - **Incremental summary** lands in between: it reduces long-history growth while paying **background summarization overhead** (tracked as `bg_input`/`bg_output`), which is why it’s more expensive than a pure sliding window in this run.
 
 ---
 
-## Limitations (Honest Notes)
+## Limitations 
 - **Semantic memory embeddings** currently use a **local deterministic hashing embedding** to keep CI offline and the pipeline reproducible. This demonstrates the **retrieval architecture**, not state-of-the-art embedding quality.
 - The **evaluation harness** is an engineering test scaffold, **not a peer-reviewed scientific benchmark**.
 - Cost numbers depend on **model pricing configuration** and provider reporting; estimates are used when usage data is unavailable.
