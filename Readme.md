@@ -1,80 +1,215 @@
-# LLM Context Optimization Engine
+# ContextFlow AI — LLM Context Engineering Platform
+**LLM Context Engineering Platform for Token-Efficient Memory, Semantic Retrieval, and Long-Session Optimization**
 
-A portfolio-grade FastAPI project for reducing long-conversation LLM cost while preserving useful memory. The app stores chat sessions in SQLite, keeps recent turns in full, summarizes older turns incrementally, caches summaries, and reports token/cost usage across both chat calls and background memory operations.
+ContextFlow AI is an AI infrastructure project for **evaluating and optimizing how long-running LLM applications manage context, memory, token usage, and cost**. It is designed as an engineering-grade portfolio piece for 2026-era LLM roles: measurable token/cost tradeoffs, memory strategy comparisons, and instrumentation for long-session behavior.
 
-This is designed to show AI/ML software engineering work, not just prompt wrapping: context-window management, memory compression, usage accounting, benchmarking, and a dashboard for inspecting what the model actually receives.
+**This is not a chatbot product.** It’s a context optimization engine and research harness that compares strategies for keeping LLM sessions coherent and affordable as histories grow.
 
-## What It Demonstrates
+---
 
-- Incremental summarization for long conversations
-- SQLite-backed session persistence and summary caching
-- Real model selection with OpenRouter-compatible model IDs
-- Deterministic `mock/echo` model for local demos and tests without an API key
-- Token and cost accounting for chat, summary, and compression calls
-- Context preview showing system memory, cached summary, and recent messages
-- Synthetic benchmark comparing full-history, sliding-window, and summary-memory strategies
-- Unit tests for context construction, caching, ordering, deletion, and usage accounting
+## Problem
+Modern LLM apps degrade as sessions get long:
+
+- **Cost and latency scale with context length** when you naively send full history.
+- **Sliding windows** keep cost down but drop older facts.
+- **Summarization** saves tokens but can introduce drift or lose detail.
+- **Retrieval** can recover older facts but adds its own complexity (indexing, embeddings quality, and prompt integration).
+
+---
+
+## Solution
+ContextFlow AI implements and evaluates multiple context strategies:
+
+- **Full history baseline**: send everything (upper bound on coherence, worst for cost).
+- **Sliding recent window**: last \(N\) messages only (token-efficient, forgetful).
+- **Incremental summaries**: summarize older turns and cache the evolving memory.
+- **Summary + semantic retrieval**: include incremental summaries plus retrieved prior facts relevant to the current prompt.
+
+The system also tracks **foreground vs background** token/cost usage (chat calls vs memory maintenance calls like summarization/compression).
+
+---
+
+## Key Features
+- **Token-aware context builder** (`context.py`)
+- **Incremental summarization with caching** (older turns summarized, recent turns preserved verbatim)
+- **Semantic memory retrieval module** (`semantic_memory.py`) with vector indexing + top‑k retrieval
+- **Model-aware token counting** (tiktoken + fallback)
+- **Usage & cost ledger** for chat + background memory operations (`llm_usage` table)
+- **Context preview endpoint** (inspect what’s actually sent to the LLM)
+- **Session stats endpoint** (tokens + cost breakdown)
+- **Benchmark harness** with exports to **JSON/CSV/PNG** (`benchmark.py`)
+- **Long-session evaluation script** scaffold (`eval_long_memory.py`)
+- **OpenRouter-compatible provider** + **deterministic mock provider** (`mock/echo`) for offline tests
+- **Docker + docker-compose** local deployment
+- **GitHub Actions CI** that runs unit tests + benchmark export
+
+---
+
+## Why This Matters
+Long-session LLM apps are an infra problem, not just a prompting problem:
+
+- **Context cost**: input tokens often dominate and grow superlinearly with “send full history”.
+- **Memory drift**: summarization can compress tokens but may lose constraints, preferences, or entities over time.
+- **Long-session coherence**: sustained narratives, agent workflows, and multi-hour assistants require stable memory.
+- **Retrieval tradeoffs**: RAG-style retrieval can reduce context while preserving facts, but requires good indexing and careful prompt integration.
+
+ContextFlow AI makes these tradeoffs explicit and measurable.
+
+---
+
+## Research/Engineering Questions Explored
+- How do **token and cost curves** differ across memory strategies as turns increase?
+- What is the **true cost** once you include **background summarization/compression overhead**?
+- How do we make memory strategies **inspectable** (context preview) rather than opaque?
+- When does **retrieval** help vs harm (irrelevant snippets, prompt dilution)?
+- How should we evaluate long-memory behaviors (recall, contradiction, drift) in a repeatable harness?
+
+---
 
 ## Architecture
 
-```text
-Browser dashboard
-  -> FastAPI API
-      -> context.py      builds optimized model context
-      -> llm_utils.py    calls OpenRouter or mock model
-      -> database.py     stores messages, summaries, pinned context, usage ledger
-      -> benchmark.py    reproducible synthetic cost comparison
+### High-level system
+
+```mermaid
+flowchart LR
+  UI[Frontend Dashboard] --> API[FastAPI Backend]
+  API --> CE[Context Engine]
+
+  CE --> W[Recent Message Window]
+  CE --> S[Incremental Summary Store]
+  CE --> R[Semantic Memory Retrieval]
+  CE --> U[Usage/Cost Ledger]
+  CE --> B[Benchmark Harness]
+
+  API --> DB[(SQLite / Persistent Storage)]
+  DB --> API
+
+  API --> LLM[OpenRouter-compatible LLM Provider]
 ```
 
-The memory strategy is:
+### Context composition (per request)
+At request time, the backend constructs:
 
-```text
-Older messages                 Recent messages
-summarized once and cached  +  preserved verbatim
-```
+1) System prompt + pinned story context  
+2) Incremental summary memory (if session is long)  
+3) Retrieved prior snippets relevant to the current prompt (optional)  
+4) Recent messages window  
+5) Current user prompt  
 
-For each request, the backend sends:
+You can inspect the exact assembled messages via the **context preview** endpoint.
 
-```text
-system prompt + pinned context + cached conversation memory + recent messages + current prompt
-```
+---
 
-## Benchmark
+## Context Strategies
+The project currently compares:
 
-Run:
+- **`full_history`**: full conversation appended each request
+- **`sliding_window`**: keep last \(N\) messages
+- **`incremental_summary`**: cached summary + recent messages
+- **`incremental_summary + retrieval`**: summary + retrieved older facts + recent messages (live app path)
+
+Note: the benchmark harness currently runs the first three strategies; the live app path includes retrieval in the system prompt.
+
+---
+
+## Benchmarking
+Run the synthetic benchmark:
 
 ```bash
 python benchmark.py --turns 100 --words-per-message 90
 ```
 
-To export artifacts for the README/dashboard:
+Export artifacts for README/dashboard use:
 
 ```bash
 python benchmark.py --json --export
 ```
 
-This writes:
-
+Exports:
 - `results/benchmark.json`
 - `results/benchmark.csv`
 - `results/benchmark.png`
 
-Current synthetic benchmark output:
+### Real benchmark results (from this repo)
+Generated with:
 
-```text
-Model: x-ai/grok-4-fast
-Conversation: 100 turns, 200 messages, 90 words/message
-
-strategy                 input      bg_input   bg_output  max_req   cost       savings
---------------------------------------------------------------------------------------
-full_history             2,110,545          0          0   42,055  $0.439609    0.00%
-sliding_window             316,200          0          0    3,306  $0.080740   81.63%
-incremental_summary        492,812     38,537      6,899    5,518  $0.127219   71.06%
+```bash
+python benchmark.py --json --export
 ```
 
-The incremental-summary result includes background summary overhead, so the comparison is more honest than only counting final chat requests.
+Run configuration:
+- Model: `x-ai/grok-4-fast`
+- Conversation: 100 turns (200 messages), 90 words/message
 
-## Quick Start
+Notes:
+- **Latency is not measured** in this synthetic benchmark (token/cost only).
+- `incremental_summary` **includes background summary overhead** (`bg_input` / `bg_output`) in `total_tokens` and `estimated_cost_usd`.
+
+| Strategy | Requests | Input tokens | Bg input | Bg output | Total tokens | Est. cost (USD) | Savings vs full |
+|---------|---------:|-------------:|---------:|----------:|-------------:|----------------:|----------------:|
+| `full_history` | 100 | 1,178,225 | 0 | 0 | 1,213,225 | 0.253145 | 0.00% |
+| `sliding_window` | 100 | 180,393 | 0 | 0 | 215,393 | 0.053579 | 78.83% |
+| `incremental_summary` | 100 | 326,654 | 21,341 | 3,774 | 386,769 | 0.088986 | 64.85% |
+
+Exported artifacts:
+- `results/benchmark.json`
+- `results/benchmark.csv`
+- `results/benchmark.png`
+
+---
+
+## Evaluation
+This repo includes a **starter evaluation harness** for long-session recall:
+
+```bash
+python eval_long_memory.py --model mock/echo
+```
+
+Current evaluation scaffolding focuses on:
+- **Long-range recall** (preference stated early, queried late)
+- **Basic contradiction checks** (heuristic)
+- **Latency measurement**
+
+Planned evaluation directions (future work):
+- **Entity consistency** and character/world-state continuity checks
+- **Summary drift detection** (summary vs source messages)
+- **Faithfulness** scoring for retrieved snippets vs ground truth
+- Cost/latency normalization across models and providers
+
+---
+
+## Dashboard
+The dashboard is a lightweight UI for:
+- Sending prompts (with selectable models)
+- Inspecting **context preview** (what the model saw)
+- Viewing session **token/cost accounting**
+- Viewing **benchmark-derived charts** (via `/api/benchmark`) and **summary calls over time**
+
+Screenshots (placeholders):
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+![Benchmark Results](docs/screenshots/benchmark.png)
+
+---
+
+## Tech Stack
+- **Python** (FastAPI, requests)
+- **FastAPI + Uvicorn** (API + local server)
+- **SQLite** (messages, summaries, pinned context, usage ledger, semantic memory vectors)
+- **OpenRouter-compatible chat API** + **`mock/echo`** deterministic local mode
+- **tiktoken** token estimation (+ fallback)
+- **Matplotlib** benchmark chart export
+- **Chart.js** dashboard charts (CDN)
+- **Docker / docker-compose**
+- **GitHub Actions** CI
+- **unittest** (offline deterministic tests)
+
+---
+
+## Setup
+
+### Local (venv)
 
 ```bash
 python -m venv .venv
@@ -95,74 +230,88 @@ Run:
 python main.py
 ```
 
-Open:
+Open `http://localhost:9000`.
 
-```text
-http://localhost:9000
-```
+Tip: for local testing without an API key, select **`mock/echo`** in the model dropdown.
 
-For local testing without an API key, select `mock/echo` in the model dropdown.
-
-## Tests
+### Docker
 
 ```bash
-python -m unittest discover -s tests
+docker compose up --build
 ```
 
-The tests use a temporary SQLite database and do not call external APIs.
+---
 
-## API
+## API Overview
 
 ```text
-GET    /                         dashboard
-GET    /api/health               service status
-GET    /api/models               configured model registry
-POST   /api/chat                 non-streaming chat
-POST   /api/chat/stream          streaming chat
-GET    /api/messages/{session}   recent stored messages
-GET    /api/context/{session}    context preview sent to the LLM
-GET    /api/stats/{session}      token and cost accounting
-GET    /api/summary/{session}    cached/generated summary
-GET    /api/sessions             saved sessions
-POST   /api/set-story/{session}  pinned source context
-DELETE /api/session/{session}    delete all session state
+GET    /                               dashboard
+GET    /api/health                     service status
+GET    /api/models                     configured model registry
+POST   /api/chat                       non-streaming chat
+POST   /api/chat/stream                streaming chat
+GET    /api/messages/{session}         recent stored messages
+GET    /api/context/{session}          context preview sent to the LLM
+GET    /api/stats/{session}            token and cost accounting
+GET    /api/summary/{session}          cached/generated summary
+GET    /api/sessions                   saved sessions
+POST   /api/set-story/{session}        pinned source context
+DELETE /api/session/{session}          delete all session state
+GET    /api/benchmark                  synthetic strategy benchmark (for charts)
+GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 ```
 
-## Project Structure
+---
+
+## Results
+This repo is set up to generate **real artifacts** (`results/benchmark.*`) that you can embed into the README and dashboard.
+
+- Run `python benchmark.py --json --export`
+- Commit `results/benchmark.png` and include it under `docs/screenshots/benchmark.png` if you want a stable README preview.
+
+### Are the results consistent with our expectations?
+Yes, for this synthetic workload the ordering matches the intended tradeoffs:
+
+- **Full history** is the most expensive because each request grows with the entire conversation.
+- **Sliding window** is the cheapest because it caps context length (but it would forget older facts by design).
+- **Incremental summary** lands in between: it reduces long-history growth while paying **background summarization overhead** (tracked as `bg_input`/`bg_output`), which is why it’s more expensive than a pure sliding window in this run.
+
+---
+
+## Limitations (Honest Notes)
+- **Semantic memory embeddings** currently use a **local deterministic hashing embedding** to keep CI offline and the pipeline reproducible. This demonstrates the **retrieval architecture**, not state-of-the-art embedding quality.
+- The **evaluation harness** is an engineering test scaffold, **not a peer-reviewed scientific benchmark**.
+- Cost numbers depend on **model pricing configuration** and provider reporting; estimates are used when usage data is unavailable.
+- “Production-ready” hardening (observability, auth, multi-tenant isolation, load testing) is **out of scope** for this repo as-is.
+
+---
+
+## Future Work
+- Integrate **real embedding providers** and compare retrieval quality
+- Swap demo vectors for **SQLite vector extension / pgvector / Qdrant / Chroma**
+- Add **summary drift detection** + regression tests
+- Add **multi-provider comparisons** (OpenAI/Anthropic/etc via compatible interfaces)
+- Add caching layers (e.g., Redis) and background job processing for memory maintenance
+- Improve evaluation metrics: faithfulness, contradiction rate, entity consistency, and long-range recall
+- Hosted dashboard + saved benchmark runs
+
+---
+
+## Repo Layout
 
 ```text
 .
-├── main.py              FastAPI app and endpoints
-├── context.py           context building and incremental summarization
-├── llm_utils.py         OpenRouter/mock model calls
-├── database.py          SQLite persistence and usage accounting
-├── benchmark.py         synthetic strategy benchmark
-├── index.html           dashboard UI
-├── tests/               unit tests
-├── config.py            model, pricing, prompt, and memory settings
-├── delete.py            guarded admin cleanup helper
-├── requirements.txt
-└── .env.example
+├── main.py                 FastAPI app and endpoints
+├── context.py              context building + incremental summary + retrieval integration
+├── semantic_memory.py       vector indexing + retrieval (demo/local embedding mode)
+├── llm_utils.py             OpenRouter + mock provider, timeout/retry handling
+├── database.py              SQLite persistence + usage ledger + memory vectors
+├── benchmark.py             synthetic benchmark + JSON/CSV/PNG export
+├── eval_long_memory.py      long-session recall evaluation scaffold
+├── index.html               dashboard UI (context preview + charts)
+├── tests/                   deterministic unit tests
+├── Dockerfile
+├── docker-compose.yml
+├── .github/workflows/test.yml
+└── requirements.txt
 ```
-
-## Resume Positioning
-
-Suggested project title:
-
-```text
-LLM Context Optimization Engine with Incremental Memory and Cost Benchmarking
-```
-
-Suggested resume bullet:
-
-```text
-Built a FastAPI-based LLM context optimization engine that compares full-history, sliding-window, and incremental-summary memory strategies; added SQLite persistence, cached summaries, model-aware token estimation, cost accounting for foreground/background LLM calls, deterministic tests, and a dashboard for inspecting context composition.
-```
-
-## Next Improvements
-
-- Add retrieval memory with embeddings/vector search
-- Add summary drift evaluation against source messages
-- Add entity memory for facts, characters, preferences, and unresolved threads
-- Export benchmark results as charts for the dashboard
-- Add Docker and CI for one-command deployment
