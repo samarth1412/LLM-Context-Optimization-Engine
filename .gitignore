@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.venv/
+story_conversations.db
+*.db
+*.log

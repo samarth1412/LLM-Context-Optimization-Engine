@@ -1,0 +1,4 @@
+strategy,requests,input_tokens,background_input_tokens,background_output_tokens,total_tokens,estimated_cost_usd,savings_vs_full_history_pct,summary_calls,max_request_tokens
+full_history,100,1178225,0,0,1213225,0.253145,0.0,0,23327
+sliding_window,100,180393,0,0,215393,0.053579,78.83,0,1870
+incremental_summary,100,326654,21341,3774,386769,0.088986,64.85,92,3986

@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    environment:
+      # Persist DB + make it easy to mount from host.
+      DB_NAME: /data/story_conversations.db
+    volumes:
+      - ./data:/data
+      - ./results:/app/results

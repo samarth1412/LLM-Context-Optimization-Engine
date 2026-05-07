@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM Context Optimizer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-strong: #f0f4f8;
+      --border: #d8e0ea;
+      --text: #142033;
+      --muted: #5d6b7d;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --green: #0f8b5f;
+      --amber: #b7791f;
+      --red: #c2410c;
+      --shadow: 0 16px 35px rgba(20, 32, 51, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      min-height: 40px;
+      padding: 0 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--surface-strong);
+      color: var(--text);
+    }
+
+    button:hover {
+      filter: brightness(0.97);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .primary {
+      background: var(--blue);
+      color: #ffffff;
+    }
+
+    .primary:hover {
+      background: var(--blue-dark);
+    }
+
+    .danger {
+      background: #fff1eb;
+      color: var(--red);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    h2 {
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .subtle {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    select {
+      min-height: 40px;
+      padding: 0 36px 0 12px;
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+      padding: 12px;
+      line-height: 1.5;
+    }
+
+    select:focus,
+    textarea:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.18);
+      border-color: var(--blue);
+    }
+
+    .model-select {
+      min-width: 230px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      padding: 18px 24px 24px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .workspace,
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .session-bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .messages {
+      min-height: 470px;
+      max-height: calc(100vh - 270px);
+      overflow-y: auto;
+      padding: 18px;
+    }
+
+    .empty-state {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .message {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid #edf1f6;
+    }
+
+    .message:last-child {
+      border-bottom: 0;
+    }
+
+    .role {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .bubble {
+      white-space: pre-wrap;
+      line-height: 1.58;
+      overflow-wrap: anywhere;
+    }
+
+    .composer {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .composer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+    }
+
+    .metric {
+      background: #ffffff;
+      padding: 14px;
+      min-height: 82px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric:nth-child(2n) {
+      border-right: 0;
+    }
+
+    .metric-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-value.green {
+      color: var(--green);
+    }
+
+    .metric-value.amber {
+      color: var(--amber);
+    }
+
+    .side-section {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .context-list {
+      display: grid;
+      gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .context-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfdff;
+    }
+
+    .context-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .context-preview {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: 420px;
+      background: #142033;
+      color: #ffffff;
+      padding: 12px 14px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .status-line {
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 20px;
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .top-actions button,
+      .model-select {
+        flex: 1 1 160px;
+      }
+
+      .shell {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .messages {
+        max-height: none;
+        min-height: 360px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .session-bar,
+      .message {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .metric {
+        border-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>LLM Context Optimizer</h1>
+      <div class="subtle">Session <span id="sessionId">loading</span></div>
+    </div>
+    <div class="top-actions">
+      <select id="modelSelect" class="model-select" aria-label="Model"></select>
+      <button id="newSession" type="button">New</button>
+      <button id="deleteSession" class="danger" type="button">Delete</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="workspace">
+      <div class="panel session-bar">
+        <select id="sessionSelect" aria-label="Session"></select>
+        <button id="refreshSessions" type="button">Refresh</button>
+      </div>
+
+      <div class="panel messages" id="messages">
+        <div class="empty-state">Loading conversation...</div>
+      </div>
+
+      <form class="panel composer" id="composer">
+        <textarea id="prompt" placeholder="Ask, continue, or test the long-memory behavior"></textarea>
+        <div class="composer-actions">
+          <button id="clearPrompt" type="button">Clear</button>
+          <button id="send" class="primary" type="submit">Send</button>
+        </div>
+        <div class="status-line" id="statusLine"></div>
+      </form>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel metrics" aria-label="Session metrics">
+        <div class="metric">
+          <span class="metric-label">Messages</span>
+          <span class="metric-value" id="metricMessages">0</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Summaries</span>
+          <span class="metric-value amber" id="metricSummaries">0</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Input Tokens</span>
+          <span class="metric-value" id="metricInput">0</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Background</span>
+          <span class="metric-value" id="metricBackground">0</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Total Cost</span>
+          <span class="metric-value green" id="metricCost">$0.000000</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Estimated Calls</span>
+          <span class="metric-value" id="metricEstimated">0</span>
+        </div>
+      </section>
+
+      <section class="panel side-section">
+        <div class="section-header">
+          <h2>Research charts</h2>
+          <button id="refreshCharts" type="button">Refresh</button>
+        </div>
+        <div class="status-line" id="chartMeta">Loading...</div>
+        <canvas id="chartTokensSaved" height="140"></canvas>
+        <canvas id="chartCostCompare" height="140"></canvas>
+        <canvas id="chartBackgroundCost" height="140"></canvas>
+        <canvas id="chartMaxContext" height="140"></canvas>
+        <canvas id="chartSummaryCalls" height="140"></canvas>
+      </section>
+
+      <section class="panel side-section">
+        <div class="section-header">
+          <h2>Pinned Context</h2>
+          <button id="saveStory" type="button">Save</button>
+        </div>
+        <textarea id="storyInput" placeholder="Paste stable source context for this session"></textarea>
+      </section>
+
+      <section class="panel side-section">
+        <div class="section-header">
+          <h2>Context Preview</h2>
+          <button id="refreshContext" type="button">Refresh</button>
+        </div>
+        <div class="status-line" id="contextMeta">No context loaded</div>
+        <div class="context-list" id="contextList"></div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script>
+    const state = {
+      currentSession: localStorage.getItem("context_optimizer_session") || generateSessionId(),
+      model: localStorage.getItem("context_optimizer_model") || "",
+      openrouterConfigured: false
+    };
+
+    const el = {
+      sessionId: document.getElementById("sessionId"),
+      modelSelect: document.getElementById("modelSelect"),
+      sessionSelect: document.getElementById("sessionSelect"),
+      refreshSessions: document.getElementById("refreshSessions"),
+      newSession: document.getElementById("newSession"),
+      deleteSession: document.getElementById("deleteSession"),
+      messages: document.getElementById("messages"),
+      composer: document.getElementById("composer"),
+      prompt: document.getElementById("prompt"),
+      clearPrompt: document.getElementById("clearPrompt"),
+      send: document.getElementById("send"),
+      statusLine: document.getElementById("statusLine"),
+      saveStory: document.getElementById("saveStory"),
+      storyInput: document.getElementById("storyInput"),
+      refreshContext: document.getElementById("refreshContext"),
+      contextMeta: document.getElementById("contextMeta"),
+      contextList: document.getElementById("contextList"),
+      toast: document.getElementById("toast"),
+      metricMessages: document.getElementById("metricMessages"),
+      metricSummaries: document.getElementById("metricSummaries"),
+      metricInput: document.getElementById("metricInput"),
+      metricBackground: document.getElementById("metricBackground"),
+      metricCost: document.getElementById("metricCost"),
+      metricEstimated: document.getElementById("metricEstimated"),
+      refreshCharts: document.getElementById("refreshCharts"),
+      chartMeta: document.getElementById("chartMeta"),
+      chartTokensSaved: document.getElementById("chartTokensSaved"),
+      chartCostCompare: document.getElementById("chartCostCompare"),
+      chartBackgroundCost: document.getElementById("chartBackgroundCost"),
+      chartMaxContext: document.getElementById("chartMaxContext"),
+      chartSummaryCalls: document.getElementById("chartSummaryCalls")
+    };
+
+    localStorage.setItem("context_optimizer_session", state.currentSession);
+    updateSessionLabel();
+
+    function generateSessionId() {
+      return "session_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function updateSessionLabel() {
+      el.sessionId.textContent = state.currentSession;
+    }
+
+    function showToast(message) {
+      el.toast.textContent = message;
+      el.toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => el.toast.classList.remove("show"), 2600);
+    }
+
+    async function request(path, options = {}) {
+      const response = await fetch(path, options);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `HTTP ${response.status}`);
+      }
+      return response.json();
+    }
+
+    function number(value) {
+      return Number(value || 0).toLocaleString();
+    }
+
+    async function loadHealth() {
+      try {
+        const data = await request("/api/health");
+        state.openrouterConfigured = Boolean(data.openrouter_configured);
+      } catch (error) {
+        state.openrouterConfigured = false;
+      }
+    }
+
+    async function loadModels() {
+      const data = await request("/api/models");
+      el.modelSelect.textContent = "";
+
+      data.models.forEach((model) => {
+        const option = document.createElement("option");
+        option.value = model.name;
+        option.textContent = model.name;
+        el.modelSelect.appendChild(option);
+      });
+
+      if (!state.model) {
+        state.model = state.openrouterConfigured ? data.default : "mock/echo";
+      }
+
+      el.modelSelect.value = state.model;
+      localStorage.setItem("context_optimizer_model", state.model);
+    }
+
+    async function loadSessionList() {
+      const data = await request("/api/sessions");
+      el.sessionSelect.textContent = "";
+
+      const current = document.createElement("option");
+      current.value = state.currentSession;
+      current.textContent = `Current: ${state.currentSession}`;
+      el.sessionSelect.appendChild(current);
+
+      data.sessions.forEach((session) => {
+        if (session.session_id === state.currentSession) {
+          return;
+        }
+        const option = document.createElement("option");
+        option.value = session.session_id;
+        option.textContent = `${session.session_id} (${session.message_count} messages)`;
+        el.sessionSelect.appendChild(option);
+      });
+    }
+
+    async function loadMessages() {
+      const data = await request(`/api/messages/${encodeURIComponent(state.currentSession)}?limit=120`);
+      renderMessages(data.messages);
+    }
+
+    function renderMessages(messages) {
+      el.messages.textContent = "";
+
+      if (!messages.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "No messages yet.";
+        el.messages.appendChild(empty);
+        return;
+      }
+
+      messages.forEach((message) => {
+        const item = document.createElement("article");
+        item.className = "message";
+
+        const role = document.createElement("div");
+        role.className = "role";
+        role.textContent = message.role;
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = message.content;
+
+        item.appendChild(role);
+        item.appendChild(bubble);
+        el.messages.appendChild(item);
+      });
+
+      el.messages.scrollTop = el.messages.scrollHeight;
+    }
+
+    async function refreshStats() {
+      const stats = await request(`/api/stats/${encodeURIComponent(state.currentSession)}`);
+      el.metricMessages.textContent = number(stats.total_messages);
+      el.metricSummaries.textContent = number(stats.cached_summaries);
+      el.metricInput.textContent = number(stats.input_tokens);
+      el.metricBackground.textContent = number(stats.background_tokens);
+      el.metricCost.textContent = stats.costs ? stats.costs.total : "$0.000000";
+      el.metricEstimated.textContent = number(stats.estimated_usage_events);
+    }
+
+    async function refreshContext() {
+      el.contextMeta.textContent = "Loading...";
+      el.contextList.textContent = "";
+
+      try {
+        const data = await request(
+          `/api/context/${encodeURIComponent(state.currentSession)}?model=${encodeURIComponent(state.model)}`
+        );
+        el.contextMeta.textContent = `${number(data.context_tokens)} tokens across ${data.message_count} context messages`;
+
+        data.messages.forEach((message) => {
+          const item = document.createElement("div");
+          item.className = "context-item";
+
+          const meta = document.createElement("div");
+          meta.className = "context-meta";
+
+          const role = document.createElement("span");
+          role.textContent = message.role;
+          const tokens = document.createElement("span");
+          tokens.textContent = `${number(message.tokens)} tokens`;
+
+          const preview = document.createElement("div");
+          preview.className = "context-preview";
+          preview.textContent = message.preview || "";
+
+          meta.appendChild(role);
+          meta.appendChild(tokens);
+          item.appendChild(meta);
+          item.appendChild(preview);
+          el.contextList.appendChild(item);
+        });
+      } catch (error) {
+        el.contextMeta.textContent = "Unable to load context preview";
+        showToast(error.message);
+      }
+    }
+
+    async function refreshAll() {
+      await Promise.all([
+        loadSessionList(),
+        loadMessages(),
+        refreshStats()
+      ]);
+      refreshContext();
+      refreshCharts();
+    }
+
+    const charts = {};
+
+    function renderBarChart(canvas, label, labels, values, color) {
+      const ctx = canvas.getContext("2d");
+      if (charts[canvas.id]) {
+        charts[canvas.id].destroy();
+      }
+      charts[canvas.id] = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: values,
+            backgroundColor: color,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {display: false},
+            tooltip: {mode: "index", intersect: false}
+          },
+          scales: {
+            x: {ticks: {color: "#5d6b7d"}},
+            y: {ticks: {color: "#5d6b7d"}, grid: {color: "rgba(93,107,125,0.12)"}}
+          }
+        }
+      });
+    }
+
+    function renderLineChart(canvas, label, labels, values, color) {
+      const ctx = canvas.getContext("2d");
+      if (charts[canvas.id]) {
+        charts[canvas.id].destroy();
+      }
+      charts[canvas.id] = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: values,
+            borderColor: color,
+            backgroundColor: "rgba(0,0,0,0)",
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {legend: {display: false}},
+          scales: {
+            x: {ticks: {color: "#5d6b7d"}},
+            y: {ticks: {color: "#5d6b7d"}, grid: {color: "rgba(93,107,125,0.12)"}, beginAtZero: true}
+          }
+        }
+      });
+    }
+
+    async function refreshCharts() {
+      el.chartMeta.textContent = "Loading...";
+      try {
+        const bench = await request(`/api/benchmark?model=${encodeURIComponent(state.model)}`);
+        const rows = bench.results || [];
+        const full = rows.find((r) => r.strategy === "full_history");
+        const labels = rows.map((r) => r.strategy);
+
+        const tokensSaved = rows.map((r) => {
+          if (!full || !full.total_tokens) return 0;
+          return Math.round((1 - (r.total_tokens / full.total_tokens)) * 1000) / 10;
+        });
+        renderBarChart(el.chartTokensSaved, "Tokens saved (%)", labels, tokensSaved, "rgba(15,139,95,0.85)");
+
+        const costs = rows.map((r) => r.estimated_cost_usd || 0);
+        renderBarChart(el.chartCostCompare, "Cost (USD)", labels, costs, "rgba(37,99,235,0.85)");
+
+        const bgCost = rows.map((r) => r.background_cost_usd || 0);
+        renderBarChart(el.chartBackgroundCost, "Background cost (USD)", labels, bgCost, "rgba(183,121,31,0.85)");
+
+        const maxReq = rows.map((r) => r.max_request_tokens || 0);
+        renderBarChart(el.chartMaxContext, "Max request tokens", labels, maxReq, "rgba(29,78,216,0.85)");
+
+        const ts = await request(`/api/usage_timeseries/${encodeURIComponent(state.currentSession)}?operation=summary`);
+        const days = (ts.points || []).map((p) => p.day);
+        const counts = (ts.points || []).map((p) => p.count);
+        renderLineChart(el.chartSummaryCalls, "Summary calls/day", days, counts, "rgba(194,65,12,0.9)");
+
+        el.chartMeta.textContent = `Benchmark model: ${bench.model} • ${bench.turns} turns • Retrieval: ${bench.retrieval ? "on" : "off"}`;
+      } catch (error) {
+        el.chartMeta.textContent = "Unable to load charts";
+      }
+    }
+
+    async function sendMessage(event) {
+      event.preventDefault();
+      const prompt = el.prompt.value.trim();
+      if (!prompt) {
+        return;
+      }
+
+      el.send.disabled = true;
+      el.statusLine.textContent = "Generating...";
+
+      try {
+        await request("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            prompt,
+            session_id: state.currentSession,
+            model: state.model
+          })
+        });
+        el.prompt.value = "";
+        el.statusLine.textContent = "";
+        await refreshAll();
+      } catch (error) {
+        el.statusLine.textContent = "Request failed";
+        showToast(error.message);
+      } finally {
+        el.send.disabled = false;
+      }
+    }
+
+    function switchSession() {
+      const nextSession = el.sessionSelect.value;
+      if (!nextSession || nextSession === state.currentSession) {
+        return;
+      }
+      state.currentSession = nextSession;
+      localStorage.setItem("context_optimizer_session", state.currentSession);
+      updateSessionLabel();
+      refreshAll();
+    }
+
+    function startNewSession() {
+      state.currentSession = generateSessionId();
+      localStorage.setItem("context_optimizer_session", state.currentSession);
+      updateSessionLabel();
+      el.prompt.value = "";
+      el.storyInput.value = "";
+      refreshAll();
+    }
+
+    async function deleteCurrentSession() {
+      const ok = window.confirm(`Delete session ${state.currentSession}?`);
+      if (!ok) {
+        return;
+      }
+      await request(`/api/session/${encodeURIComponent(state.currentSession)}`, {method: "DELETE"});
+      startNewSession();
+      showToast("Session deleted");
+    }
+
+    async function saveStory() {
+      const response = await fetch(`/api/set-story/${encodeURIComponent(state.currentSession)}`, {
+        method: "POST",
+        headers: {"Content-Type": "text/plain"},
+        body: el.storyInput.value
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      showToast("Pinned context saved");
+      refreshContext();
+    }
+
+    el.composer.addEventListener("submit", sendMessage);
+    el.clearPrompt.addEventListener("click", () => {
+      el.prompt.value = "";
+      el.statusLine.textContent = "";
+    });
+    el.sessionSelect.addEventListener("change", switchSession);
+    el.refreshSessions.addEventListener("click", refreshAll);
+    el.newSession.addEventListener("click", startNewSession);
+    el.deleteSession.addEventListener("click", () => deleteCurrentSession().catch((error) => showToast(error.message)));
+    el.saveStory.addEventListener("click", () => saveStory().catch((error) => showToast(error.message)));
+    el.refreshContext.addEventListener("click", () => refreshContext().catch((error) => showToast(error.message)));
+    el.refreshCharts.addEventListener("click", () => refreshCharts().catch(() => {}));
+    el.modelSelect.addEventListener("change", () => {
+      state.model = el.modelSelect.value;
+      localStorage.setItem("context_optimizer_model", state.model);
+      refreshContext();
+      refreshCharts();
+    });
+
+    (async function init() {
+      try {
+        await loadHealth();
+        await loadModels();
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message);
+      }
+    })();
+  </script>
+</body>
+</html>
