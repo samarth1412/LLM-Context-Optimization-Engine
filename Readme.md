@@ -265,16 +265,6 @@ This repo is set up to generate **real artifacts** (`results/benchmark.*`) that 
 
 ---
 
-## Future Work
-- Integrate **real embedding providers** and compare retrieval quality
-- Swap demo vectors for **SQLite vector extension / pgvector / Qdrant / Chroma**
-- Add **summary drift detection** + regression tests
-- Add **multi-provider comparisons** (OpenAI/Anthropic/etc via compatible interfaces)
-- Add caching layers (e.g., Redis) and background job processing for memory maintenance
-- Improve evaluation metrics: faithfulness, contradiction rate, entity consistency, and long-range recall
-- Hosted dashboard + saved benchmark runs
-
----
 
 ## Repo Layout
 
