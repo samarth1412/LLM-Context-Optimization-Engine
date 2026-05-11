@@ -1,0 +1,25 @@
+case,strategy,answer,prompt_tokens,completion_tokens,cached_input_tokens,latency_ms,estimated_cost_usd,required_recall,conflict_score,abstained,answer_quality
+long_range_preference,full_history,The user's favorite tea is jasmine.,1865,7,1792,1563,0.00028395,1.0,0.0,False,1.0
+long_range_preference,sliding_window,The user's favorite tea is unknown from the context.,411,10,0,950,6.765e-05,0.0,0.0,True,0.0
+long_range_preference,summary,The user's favorite tea is jasmine.,421,7,0,613,6.735e-05,1.0,0.0,False,1.0
+long_range_preference,retrieval,The user's favorite tea is jasmine.,442,7,0,1437,7.05e-05,1.0,0.0,False,1.0
+long_range_preference,hybrid,The user's favorite tea is jasmine.,452,7,0,1184,7.2e-05,1.0,0.0,False,1.0
+long_range_preference,adaptive,The user's favorite tea is jasmine.,442,7,0,738,7.05e-05,1.0,0.0,False,1.0
+temporal_update,full_history,The current preferred editor is Zed.,1888,8,1792,1547,0.000288,1.0,0.0,False,1.0
+temporal_update,sliding_window,The current preferred editor is unknown from the context.,411,10,0,1030,6.765e-05,0.0,0.0,True,0.0
+temporal_update,summary,The current preferred editor is Zed.,422,8,0,990,6.81e-05,1.0,0.0,False,1.0
+temporal_update,retrieval,The current preferred editor is Zed.,470,8,0,1092,7.53e-05,1.0,0.0,False,1.0
+temporal_update,hybrid,The current preferred editor is Zed.,481,8,0,1097,7.695e-05,1.0,0.0,False,1.0
+temporal_update,adaptive,The current preferred editor is Zed.,422,8,0,889,6.81e-05,1.0,0.0,False,1.0
+multi_hop_project_state,full_history,Zephyr uses a dragonfly logo.,1884,8,1792,1333,0.0002874,1.0,0.0,False,1.0
+multi_hop_project_state,sliding_window,The logo that Zephyr uses is unknown from the context provided.,411,13,0,890,6.945e-05,0.0,0.0,True,0.0
+multi_hop_project_state,summary,Zephyr uses a dragonfly logo.,430,8,0,508,6.93e-05,1.0,0.0,False,1.0
+multi_hop_project_state,retrieval,Zephyr uses a dragonfly logo.,468,8,0,1235,7.5e-05,1.0,0.0,False,1.0
+multi_hop_project_state,hybrid,Zephyr uses a dragonfly logo.,487,8,0,1033,7.785e-05,1.0,0.0,False,1.0
+multi_hop_project_state,adaptive,Zephyr uses a dragonfly logo.,468,8,0,876,7.5e-05,1.0,0.0,False,1.0
+abstention_no_evidence,full_history,The user's passport number is unknown from the context.,1841,10,1792,939,0.00028215,1.0,0.0,True,1.0
+abstention_no_evidence,sliding_window,The user's passport number is unknown from the context.,411,10,0,1093,6.765e-05,1.0,0.0,True,1.0
+abstention_no_evidence,summary,The user's passport number is unknown from the context.,422,10,0,1298,6.93e-05,1.0,0.0,True,1.0
+abstention_no_evidence,retrieval,The user's passport number is unknown from the context.,411,10,0,1116,6.765e-05,1.0,0.0,True,1.0
+abstention_no_evidence,hybrid,The user's passport number is unknown from the context.,422,10,0,1525,6.93e-05,1.0,0.0,True,1.0
+abstention_no_evidence,adaptive,The user's passport number is unknown from the context.,411,10,0,875,6.765e-05,1.0,0.0,True,1.0

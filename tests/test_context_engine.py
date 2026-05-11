@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import context
 import database
+from semantic_memory import index_message, retrieve
 
 
 def fake_usage(input_tokens=100, output_tokens=20):
@@ -85,6 +86,63 @@ class ContextEngineTests(unittest.TestCase):
         self.assertEqual(stats["background_input_tokens"], 500)
         self.assertEqual(stats["background_output_tokens"], 100)
         self.assertGreater(stats["total_cost_usd"], 0)
+
+    def test_usage_stats_track_prompt_cache_tokens(self):
+        database.record_llm_usage(
+            "s1",
+            "chat",
+            "x-ai/grok-4-fast",
+            1000,
+            100,
+            cached_input_tokens=600,
+            cache_write_tokens=50,
+        )
+
+        stats = database.get_session_stats("s1")
+
+        self.assertEqual(stats["cached_input_tokens"], 600)
+        self.assertEqual(stats["cache_write_tokens"], 50)
+        self.assertLess(stats["input_cost_usd"], database.calculate_cost("x-ai/grok-4-fast", 1000, 0)["input"])
+
+    def test_retrieval_ranks_exact_memory_fact(self):
+        fact_id = database.store_message_with_usage(
+            "s1",
+            "user",
+            "Stable memory: the user's favorite tea is jasmine.",
+        )
+        index_message("s1", fact_id, "user", "Stable memory: the user's favorite tea is jasmine.")
+        other_id = database.store_message_with_usage(
+            "s1",
+            "assistant",
+            "Routine implementation chatter about formatting.",
+        )
+        index_message("s1", other_id, "assistant", "Routine implementation chatter about formatting.")
+
+        results = retrieve("s1", "What is the user's favorite tea?", top_k=2)
+
+        self.assertGreaterEqual(len(results), 1)
+        self.assertIn("jasmine", results[0]["content"])
+        self.assertGreater(results[0]["lexical_score"], 0)
+
+    def test_adaptive_context_uses_retrieval_for_memory_question(self):
+        for index in range(20):
+            if index == 1:
+                content = "Stable memory: the user's favorite tea is jasmine."
+            else:
+                content = f"message-{index}"
+            role = "user" if index % 2 == 0 else "assistant"
+            message_id = database.store_message_with_usage("s1", role, content)
+            index_message("s1", message_id, role, content)
+
+        built = context.build_context(
+            "s1",
+            model="mock/echo",
+            query="What is the user's favorite tea?",
+            policy="adaptive",
+        )
+
+        self.assertIn("Retrieved relevant prior facts", built[0]["content"])
+        self.assertIn("jasmine", built[0]["content"])
 
     def test_delete_session_removes_all_session_state(self):
         self.add_messages("s1", 3)

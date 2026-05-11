@@ -8,11 +8,23 @@ load_dotenv()
 
 # API configuration
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+GEMINI_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
 def get_openrouter_key() -> Optional[str]:
     """Read the API key lazily so tests and local demos can run without network access."""
     return os.getenv("OPENROUTER_API_KEY")
+
+
+def get_openai_key() -> Optional[str]:
+    """Read the OpenAI API key lazily so tests can run without network access."""
+    return os.getenv("OPENAI_API_KEY")
+
+
+def get_gemini_key() -> Optional[str]:
+    """Read the Gemini API key lazily so tests can run without network access."""
+    return os.getenv("GEMINI_API_KEY")
 
 
 # Model configuration. Prices are USD per 1M tokens and are used for portfolio
@@ -22,22 +34,40 @@ MODEL_REGISTRY: Dict[str, Dict[str, float]] = {
         "max_output": 4000,
         "input_cost_per_1m": 0.20,
         "output_cost_per_1m": 0.50,
+        "cached_input_cost_per_1m": 0.05,
     },
     "openai/gpt-4o-mini": {
         "max_output": 4000,
         "input_cost_per_1m": 0.15,
         "output_cost_per_1m": 0.60,
+        # Conservative default. Providers expose exact cache-read usage, but
+        # cache-read pricing can vary by model and route.
+        "cached_input_cost_per_1m": 0.15,
+    },
+    "google/gemini-2.5-flash": {
+        "max_output": 8192,
+        "input_cost_per_1m": 0.30,
+        "output_cost_per_1m": 2.50,
+        "cached_input_cost_per_1m": 0.03,
+    },
+    "google/gemini-3.1-flash-lite": {
+        "max_output": 8192,
+        "input_cost_per_1m": 0.25,
+        "output_cost_per_1m": 1.50,
+        "cached_input_cost_per_1m": 0.025,
     },
     "anthropic/claude-3.5-haiku": {
         "max_output": 4000,
         "input_cost_per_1m": 0.80,
         "output_cost_per_1m": 4.00,
+        "cached_input_cost_per_1m": 0.08,
     },
     # Deterministic local model used by tests, demos, and benchmark validation.
     "mock/echo": {
         "max_output": 1000,
         "input_cost_per_1m": 0.0,
         "output_cost_per_1m": 0.0,
+        "cached_input_cost_per_1m": 0.0,
     },
 }
 
@@ -63,6 +93,9 @@ MESSAGE_COMPRESS_THRESHOLD = int(os.getenv("MESSAGE_COMPRESS_THRESHOLD", "2500")
 MESSAGE_COMPRESSED_SIZE = int(os.getenv("MESSAGE_COMPRESSED_SIZE", "800"))
 TARGET_INPUT_TOKENS = int(os.getenv("TARGET_INPUT_TOKENS", "20000"))
 MAX_INPUT_TOKENS = int(os.getenv("MAX_INPUT_TOKENS", "50000"))
+CONTEXT_POLICY = os.getenv("CONTEXT_POLICY", "adaptive")
+RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "6"))
+RETRIEVAL_MIN_SCORE = float(os.getenv("RETRIEVAL_MIN_SCORE", "0.08"))
 
 
 # Rate limiting

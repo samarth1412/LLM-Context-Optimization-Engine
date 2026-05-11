@@ -28,6 +28,10 @@ jobs:
         run: |
           python benchmark.py --json --export
 
+      - name: Run memory-quality eval (json)
+        run: |
+          python eval_memory_quality.py --json --export
+
       - name: Upload benchmark artifacts
         uses: actions/upload-artifact@v4
         with:

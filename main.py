@@ -140,6 +140,9 @@ def chat(body: PromptIn):
         prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
         completion_tokens = int(usage.get("completion_tokens", 0) or 0)
         estimated = bool(usage.get("estimated", False))
+        cached_input_tokens = int(usage.get("cached_input_tokens", 0) or 0)
+        cache_write_tokens = int(usage.get("cache_write_tokens", 0) or 0)
+        latency_ms = usage.get("latency_ms")
 
         user_id = store_message_with_usage(body.session_id, "user", prompt)
         if user_id:
@@ -161,6 +164,9 @@ def chat(body: PromptIn):
             prompt_tokens,
             completion_tokens,
             estimated=estimated,
+            cached_input_tokens=cached_input_tokens,
+            cache_write_tokens=cache_write_tokens,
+            latency_ms=latency_ms,
         )
 
         logger.info(
@@ -224,8 +230,18 @@ def get_summary_endpoint(session_id: str, model: str = MODEL_CONFIG["name"]):
 
 
 @app.get("/api/context/{session_id}")
-def get_context_endpoint(session_id: str, model: str = MODEL_CONFIG["name"]):
-    return context_preview(session_id, model=model)
+def get_context_endpoint(
+    session_id: str,
+    model: str = MODEL_CONFIG["name"],
+    query: str = "",
+    policy: str = "",
+):
+    return context_preview(
+        session_id,
+        model=model,
+        query=query.strip() or None,
+        policy=policy.strip() or None,
+    )
 
 
 @app.get("/api/messages/{session_id}")
@@ -301,6 +317,8 @@ async def chat_stream(body: PromptIn):
                 "prompt_tokens": input_tokens,
                 "completion_tokens": output_tokens,
                 "total_tokens": input_tokens + output_tokens,
+                "cached_input_tokens": 0,
+                "cache_write_tokens": 0,
                 "estimated": True,
             }
 

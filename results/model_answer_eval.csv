@@ -1,0 +1,17 @@
+case,strategy,answer,prompt_tokens,completion_tokens,cached_input_tokens,latency_ms,estimated_cost_usd,required_recall,conflict_score,abstained,answer_quality
+long_range_preference,full_history,The user's favorite tea is jasmine.,1700,9,0,17714,0.0004385,1.0,0.0,False,1.0
+long_range_preference,sliding_window,It is unknown from the context.,377,7,0,13401,0.00010475,0.0,0.0,True,0.0
+long_range_preference,summary,The user's favorite tea is jasmine.,391,9,0,14572,0.00011125,1.0,0.0,False,1.0
+long_range_preference,adaptive,The user's favorite tea is jasmine.,415,9,0,9511,0.00011725,1.0,0.0,False,1.0
+temporal_update,full_history,The current preferred editor is Zed.,1720,7,0,18097,0.0004405,1.0,0.0,False,1.0
+temporal_update,sliding_window,It is unknown from the context.,375,7,0,13924,0.00010425,0.0,0.0,True,0.0
+temporal_update,summary,The current preferred editor is Zed.,387,7,0,12010,0.00010725,1.0,0.0,False,1.0
+temporal_update,adaptive,The current preferred editor is Zed.,387,7,0,11694,0.00010725,1.0,0.0,False,1.0
+multi_hop_project_state,full_history,Zephyr uses a dragonfly logo.,1717,7,0,4625,0.00043975,1.0,0.0,False,1.0
+multi_hop_project_state,sliding_window,It is unknown from the context.,375,7,0,11314,0.00010425,0.0,0.0,True,0.0
+multi_hop_project_state,summary,Zephyr uses a dragonfly logo.,396,7,0,4796,0.0001095,1.0,0.0,False,1.0
+multi_hop_project_state,adaptive,Zephyr uses a dragonfly logo.,443,7,0,13173,0.00012125,1.0,0.0,False,1.0
+abstention_no_evidence,full_history,It is unknown from the context.,1667,7,0,10111,0.00042725,1.0,0.0,True,1.0
+abstention_no_evidence,sliding_window,It is unknown from the context.,377,7,0,8706,0.00010475,1.0,0.0,True,1.0
+abstention_no_evidence,summary,The user's passport number is unknown from the context.,390,12,0,33552,0.0001155,1.0,0.0,True,1.0
+abstention_no_evidence,adaptive,It is unknown from the context.,377,7,0,8805,0.00010475,1.0,0.0,True,1.0

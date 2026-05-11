@@ -1,0 +1,315 @@
+{
+  "model": "mock/echo",
+  "cases": [
+    "long_range_preference",
+    "temporal_update",
+    "multi_hop_project_state",
+    "abstention_no_evidence"
+  ],
+  "strategies": [
+    "full_history",
+    "sliding_window",
+    "summary",
+    "retrieval",
+    "hybrid",
+    "adaptive"
+  ],
+  "results": [
+    {
+      "case": "long_range_preference",
+      "strategy": "full_history",
+      "context_tokens": 1829,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 81,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "long_range_preference",
+      "strategy": "sliding_window",
+      "context_tokens": 371,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 0.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 0.0
+    },
+    {
+      "case": "long_range_preference",
+      "strategy": "summary",
+      "context_tokens": 382,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "long_range_preference",
+      "strategy": "retrieval",
+      "context_tokens": 404,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "long_range_preference",
+      "strategy": "hybrid",
+      "context_tokens": 415,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "long_range_preference",
+      "strategy": "adaptive",
+      "context_tokens": 404,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "temporal_update",
+      "strategy": "full_history",
+      "context_tokens": 1849,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 81,
+      "required_recall": 1.0,
+      "conflict_pressure": 1.0,
+      "quality_score": 0.65
+    },
+    {
+      "case": "temporal_update",
+      "strategy": "sliding_window",
+      "context_tokens": 371,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "temporal_update",
+      "strategy": "summary",
+      "context_tokens": 382,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "temporal_update",
+      "strategy": "retrieval",
+      "context_tokens": 431,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 1.0,
+      "quality_score": 0.65
+    },
+    {
+      "case": "temporal_update",
+      "strategy": "hybrid",
+      "context_tokens": 442,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 1.0,
+      "quality_score": 0.65
+    },
+    {
+      "case": "temporal_update",
+      "strategy": "adaptive",
+      "context_tokens": 382,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "multi_hop_project_state",
+      "strategy": "full_history",
+      "context_tokens": 1849,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 81,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "multi_hop_project_state",
+      "strategy": "sliding_window",
+      "context_tokens": 371,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 0.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 0.0
+    },
+    {
+      "case": "multi_hop_project_state",
+      "strategy": "summary",
+      "context_tokens": 392,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "multi_hop_project_state",
+      "strategy": "retrieval",
+      "context_tokens": 431,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "multi_hop_project_state",
+      "strategy": "hybrid",
+      "context_tokens": 452,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "multi_hop_project_state",
+      "strategy": "adaptive",
+      "context_tokens": 431,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "abstention_no_evidence",
+      "strategy": "full_history",
+      "context_tokens": 1801,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 81,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "abstention_no_evidence",
+      "strategy": "sliding_window",
+      "context_tokens": 371,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "abstention_no_evidence",
+      "strategy": "summary",
+      "context_tokens": 382,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "abstention_no_evidence",
+      "strategy": "retrieval",
+      "context_tokens": 371,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "abstention_no_evidence",
+      "strategy": "hybrid",
+      "context_tokens": 382,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    },
+    {
+      "case": "abstention_no_evidence",
+      "strategy": "adaptive",
+      "context_tokens": 371,
+      "estimated_input_cost_usd": 0.0,
+      "message_count": 16,
+      "required_recall": 1.0,
+      "conflict_pressure": 0.0,
+      "quality_score": 1.0
+    }
+  ],
+  "aggregate": [
+    {
+      "strategy": "full_history",
+      "mean_quality_score": 0.9125,
+      "mean_required_recall": 1.0,
+      "mean_conflict_pressure": 0.25,
+      "total_context_tokens": 7328,
+      "mean_context_tokens": 1832,
+      "quality_per_1k_tokens": 0.4981
+    },
+    {
+      "strategy": "sliding_window",
+      "mean_quality_score": 0.5,
+      "mean_required_recall": 0.5,
+      "mean_conflict_pressure": 0.0,
+      "total_context_tokens": 1484,
+      "mean_context_tokens": 371,
+      "quality_per_1k_tokens": 0.5
+    },
+    {
+      "strategy": "summary",
+      "mean_quality_score": 1.0,
+      "mean_required_recall": 1.0,
+      "mean_conflict_pressure": 0.0,
+      "total_context_tokens": 1538,
+      "mean_context_tokens": 384.5,
+      "quality_per_1k_tokens": 1.0
+    },
+    {
+      "strategy": "retrieval",
+      "mean_quality_score": 0.9125,
+      "mean_required_recall": 1.0,
+      "mean_conflict_pressure": 0.25,
+      "total_context_tokens": 1637,
+      "mean_context_tokens": 409.25,
+      "quality_per_1k_tokens": 0.9125
+    },
+    {
+      "strategy": "hybrid",
+      "mean_quality_score": 0.9125,
+      "mean_required_recall": 1.0,
+      "mean_conflict_pressure": 0.25,
+      "total_context_tokens": 1691,
+      "mean_context_tokens": 422.75,
+      "quality_per_1k_tokens": 0.9125
+    },
+    {
+      "strategy": "adaptive",
+      "mean_quality_score": 1.0,
+      "mean_required_recall": 1.0,
+      "mean_conflict_pressure": 0.0,
+      "total_context_tokens": 1588,
+      "mean_context_tokens": 397,
+      "quality_per_1k_tokens": 1.0
+    }
+  ]
+}

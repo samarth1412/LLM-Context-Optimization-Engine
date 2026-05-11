@@ -3,10 +3,13 @@ from typing import Dict, List, Optional
 import logging
 
 from config import (
+    CONTEXT_POLICY,
     MAX_INPUT_TOKENS,
     MESSAGE_COMPRESS_THRESHOLD,
     MESSAGE_COMPRESSED_SIZE,
     RECENT_MESSAGE_COUNT,
+    RETRIEVAL_MIN_SCORE,
+    RETRIEVAL_TOP_K,
     STORY_SYSTEM_PROMPT,
     SUMMARY_MAX_TOKENS,
 )
@@ -31,11 +34,86 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
+VALID_POLICIES = {
+    "full_history",
+    "sliding_window",
+    "summary",
+    "retrieval",
+    "hybrid",
+    "adaptive",
+}
+
+MEMORY_QUERY_HINTS = (
+    "remember",
+    "recall",
+    "earlier",
+    "previous",
+    "before",
+    "original",
+    "mentioned",
+    "told",
+    "said",
+    "favorite",
+    "prefer",
+    "who is",
+    "what is",
+    "when did",
+    "where did",
+)
+
+BROAD_QUERY_HINTS = (
+    "summarize",
+    "recap",
+    "so far",
+    "overall",
+    "state",
+    "status",
+    "current",
+    "story",
+    "plot",
+    "relationship",
+    "all",
+)
+
+CURRENT_STATE_HINTS = (
+    "current",
+    "latest",
+    "now",
+    "today",
+    "updated",
+)
+
+
 def _usage_tokens(usage: Dict) -> tuple:
     return (
         int(usage.get("prompt_tokens", 0) or 0),
         int(usage.get("completion_tokens", 0) or 0),
         bool(usage.get("estimated", False)),
+        int(usage.get("cached_input_tokens", 0) or 0),
+        int(usage.get("cache_write_tokens", 0) or 0),
+        usage.get("latency_ms"),
+    )
+
+
+def _record_usage_from_response(
+    session_id: str,
+    operation: str,
+    model: Optional[str],
+    usage: Dict,
+) -> None:
+    input_tokens, output_tokens, estimated, cached_tokens, cache_write_tokens, latency_ms = (
+        _usage_tokens(usage)
+    )
+    record_llm_usage(
+        session_id=session_id,
+        operation=operation,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        estimated=estimated,
+        cached_input_tokens=cached_tokens,
+        cache_write_tokens=cache_write_tokens,
+        latency_ms=latency_ms,
     )
 
 
@@ -58,15 +136,7 @@ def compress_if_needed(
     )
 
     if session_id:
-        input_tokens, output_tokens, estimated = _usage_tokens(usage)
-        record_llm_usage(
-            session_id=session_id,
-            operation="compression",
-            model=model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            estimated=estimated,
-        )
+        _record_usage_from_response(session_id, "compression", model, usage)
 
     return {
         "role": message["role"],
@@ -96,15 +166,7 @@ def generate_summary_incremental(
             extra={"session_id": session_id, "operation": "summary"},
         )
         new_summary_part, usage = generate_summary(new_messages, max_tokens=1000, model=model)
-        input_tokens, output_tokens, estimated = _usage_tokens(usage)
-        record_llm_usage(
-            session_id,
-            "summary",
-            model,
-            input_tokens,
-            output_tokens,
-            estimated=estimated,
-        )
+        _record_usage_from_response(session_id, "summary", model, usage)
 
         combined = f"{prev_summary}\n\nRecent developments: {new_summary_part}"
 
@@ -117,15 +179,7 @@ def generate_summary_incremental(
             combined, usage = generate_summary(
                 all_messages, max_tokens=SUMMARY_MAX_TOKENS, model=model
             )
-            input_tokens, output_tokens, estimated = _usage_tokens(usage)
-            record_llm_usage(
-                session_id,
-                "summary_refresh",
-                model,
-                input_tokens,
-                output_tokens,
-                estimated=estimated,
-            )
+            _record_usage_from_response(session_id, "summary_refresh", model, usage)
 
         return combined
 
@@ -135,15 +189,7 @@ def generate_summary_incremental(
     )
     messages = get_messages_range(session_id, 1, target_coverage)
     summary, usage = generate_summary(messages, max_tokens=SUMMARY_MAX_TOKENS, model=model)
-    input_tokens, output_tokens, estimated = _usage_tokens(usage)
-    record_llm_usage(
-        session_id,
-        "summary",
-        model,
-        input_tokens,
-        output_tokens,
-        estimated=estimated,
-    )
+    _record_usage_from_response(session_id, "summary", model, usage)
     return summary
 
 
@@ -171,11 +217,35 @@ def _system_message(
     return {"role": "system", "content": "\n\n".join(sections)}
 
 
+def _normalize_policy(policy: Optional[str]) -> str:
+    selected = (policy or CONTEXT_POLICY or "adaptive").strip().lower()
+    if selected not in VALID_POLICIES:
+        logger.warning("unknown context policy; using adaptive", extra={"operation": "build_context"})
+        return "adaptive"
+    return selected
+
+
+def _query_intent(query: Optional[str]) -> Dict[str, bool]:
+    normalized = (query or "").lower()
+    return {
+        "memory": any(hint in normalized for hint in MEMORY_QUERY_HINTS),
+        "broad": any(hint in normalized for hint in BROAD_QUERY_HINTS),
+        "current_state": any(hint in normalized for hint in CURRENT_STATE_HINTS),
+    }
+
+
+def _filter_retrieved(items: Optional[List[Dict]]) -> List[Dict]:
+    if not items:
+        return []
+    return [item for item in items if float(item.get("score", 0) or 0) >= RETRIEVAL_MIN_SCORE]
+
+
 def build_context(
     session_id: str,
     model: Optional[str] = None,
     query: Optional[str] = None,
-    retrieval_k: int = 6,
+    retrieval_k: int = RETRIEVAL_TOP_K,
+    policy: Optional[str] = None,
 ) -> List[Dict]:
     """Build context from previously stored messages only.
 
@@ -183,15 +253,22 @@ def build_context(
     returns. That avoids duplicating the newest prompt in the LLM request.
     """
     total_messages = count_messages(session_id)
+    selected_policy = _normalize_policy(policy)
     logger.info(
         "build context",
-        extra={"session_id": session_id, "operation": "build_context"},
+        extra={"session_id": session_id, "operation": "build_context", "policy": selected_policy},
     )
+
+    if selected_policy == "full_history":
+        messages = get_all_messages(session_id)
+        messages = [compress_if_needed(msg, session_id, model) for msg in messages]
+        retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
+        return [_system_message(session_id, retrieved=retrieved), *messages]
 
     if total_messages <= RECENT_MESSAGE_COUNT:
         messages = get_all_messages(session_id)
         messages = [compress_if_needed(msg, session_id, model) for msg in messages]
-        retrieved = retrieve(session_id, query, top_k=retrieval_k) if query else None
+        retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
         return [_system_message(session_id, retrieved=retrieved), *messages]
 
     old_message_count = total_messages - RECENT_MESSAGE_COUNT
@@ -200,23 +277,51 @@ def build_context(
         extra={"session_id": session_id, "operation": "build_context"},
     )
 
-    summary = get_cached_summary(session_id, old_message_count)
-    if not summary:
-        summary = generate_summary_incremental(session_id, old_message_count, model=model)
-        cache_summary(session_id, old_message_count, summary)
-    else:
-        logger.info(
-            "using cached summary",
-            extra={"session_id": session_id, "operation": "build_context"},
-        )
-
     recent_messages = get_last_n_messages(session_id, RECENT_MESSAGE_COUNT)
     recent_messages = [
         compress_if_needed(msg, session_id=session_id, model=model) for msg in recent_messages
     ]
 
-    retrieved = retrieve(session_id, query, top_k=retrieval_k) if query else None
-    context = [_system_message(session_id, summary, retrieved=retrieved), *recent_messages]
+    if selected_policy == "sliding_window":
+        return [_system_message(session_id), *recent_messages]
+
+    retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
+    intent = _query_intent(query)
+    strong_retrieval = bool(retrieved and float(retrieved[0].get("score", 0) or 0) >= RETRIEVAL_MIN_SCORE)
+
+    include_retrieval = selected_policy in {"retrieval", "hybrid"}
+    include_summary = selected_policy in {"summary", "hybrid"}
+
+    if selected_policy == "adaptive":
+        include_retrieval = bool(
+            query
+            and not intent["current_state"]
+            and (intent["memory"] or intent["broad"] or strong_retrieval)
+        )
+        # Broad or ambiguous turns need global state; high-confidence factoid
+        # retrieval can skip the summary and save prompt tokens.
+        include_summary = intent["broad"] or intent["current_state"] or not include_retrieval or not query
+
+    summary = None
+    if include_summary:
+        summary = get_cached_summary(session_id, old_message_count)
+        if not summary:
+            summary = generate_summary_incremental(session_id, old_message_count, model=model)
+            cache_summary(session_id, old_message_count, summary)
+        else:
+            logger.info(
+                "using cached summary",
+                extra={"session_id": session_id, "operation": "build_context"},
+            )
+
+    context = [
+        _system_message(
+            session_id,
+            summary=summary,
+            retrieved=retrieved if include_retrieval else None,
+        ),
+        *recent_messages,
+    ]
     total_tokens = sum(estimate_tokens(msg["content"], model) for msg in context)
     logger.info(
         "context tokens computed",
@@ -233,12 +338,18 @@ def build_context(
     return context
 
 
-def context_preview(session_id: str, model: Optional[str] = None) -> Dict:
+def context_preview(
+    session_id: str,
+    model: Optional[str] = None,
+    query: Optional[str] = None,
+    policy: Optional[str] = None,
+) -> Dict:
     """Return a compact view of the context that would be sent to the model."""
-    messages = build_context(session_id, model=model)
+    messages = build_context(session_id, model=model, query=query, policy=policy)
     token_counts = [estimate_tokens(msg["content"], model) for msg in messages]
     return {
         "session_id": session_id,
+        "policy": _normalize_policy(policy),
         "message_count": len(messages),
         "context_tokens": sum(token_counts),
         "messages": [

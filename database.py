@@ -72,6 +72,10 @@ def init_database():
         """
     )
 
+    _ensure_column(cursor, "llm_usage", "cached_input_tokens", "INTEGER DEFAULT 0")
+    _ensure_column(cursor, "llm_usage", "cache_write_tokens", "INTEGER DEFAULT 0")
+    _ensure_column(cursor, "llm_usage", "latency_ms", "INTEGER")
+
     cursor.execute(
         "CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id, id)"
     )
@@ -104,6 +108,13 @@ def init_database():
     conn.close()
 
 
+def _ensure_column(cursor, table: str, column: str, column_type: str) -> None:
+    cursor.execute(f"PRAGMA table_info({table})")
+    columns = {row[1] for row in cursor.fetchall()}
+    if column not in columns:
+        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}")
+
+
 def estimate_tokens(text: str, model: Optional[str] = None) -> int:
     """Estimate tokens with tiktoken when installed, otherwise use a safe fallback."""
     if not text:
@@ -127,9 +138,19 @@ def estimate_messages_tokens(messages: List[Dict], model: Optional[str] = None) 
     return sum(estimate_tokens(msg.get("content", ""), model) + 4 for msg in messages)
 
 
-def calculate_cost(model: Optional[str], input_tokens: int, output_tokens: int) -> Dict:
+def calculate_cost(
+    model: Optional[str],
+    input_tokens: int,
+    output_tokens: int,
+    cached_input_tokens: int = 0,
+) -> Dict:
     config = get_model_config(model)
-    input_cost = (input_tokens / 1_000_000) * float(config["input_cost_per_1m"])
+    cached_input_tokens = max(0, min(int(cached_input_tokens or 0), int(input_tokens or 0)))
+    uncached_input_tokens = max(0, int(input_tokens or 0) - cached_input_tokens)
+    input_cost = (uncached_input_tokens / 1_000_000) * float(config["input_cost_per_1m"])
+    input_cost += (cached_input_tokens / 1_000_000) * float(
+        config.get("cached_input_cost_per_1m", config["input_cost_per_1m"])
+    )
     output_cost = (output_tokens / 1_000_000) * float(config["output_cost_per_1m"])
     return {
         "input": input_cost,
@@ -145,10 +166,13 @@ def record_llm_usage(
     input_tokens: int,
     output_tokens: int,
     estimated: bool = False,
+    cached_input_tokens: int = 0,
+    cache_write_tokens: int = 0,
+    latency_ms: Optional[int] = None,
 ):
     """Record every paid or estimated LLM operation, including summaries."""
     selected_model = model or DEFAULT_MODEL
-    costs = calculate_cost(selected_model, input_tokens, output_tokens)
+    costs = calculate_cost(selected_model, input_tokens, output_tokens, cached_input_tokens)
 
     conn = _connect()
     cursor = conn.cursor()
@@ -156,9 +180,10 @@ def record_llm_usage(
         """
         INSERT INTO llm_usage (
             session_id, operation, model, input_tokens, output_tokens, total_tokens,
-            input_cost_usd, output_cost_usd, total_cost_usd, estimated
+            input_cost_usd, output_cost_usd, total_cost_usd, estimated,
+            cached_input_tokens, cache_write_tokens, latency_ms
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             session_id,
@@ -171,6 +196,9 @@ def record_llm_usage(
             costs["output"],
             costs["total"],
             1 if estimated else 0,
+            int(cached_input_tokens or 0),
+            int(cache_write_tokens or 0),
+            latency_ms,
         ),
     )
     conn.commit()
@@ -340,12 +368,15 @@ def _empty_usage_stats() -> Dict:
         "input_tokens": 0,
         "output_tokens": 0,
         "total_tokens": 0,
+        "cached_input_tokens": 0,
+        "cache_write_tokens": 0,
         "estimated_usage_events": 0,
         "input_cost_usd": 0.0,
         "output_cost_usd": 0.0,
         "chat_cost_usd": 0.0,
         "background_cost_usd": 0.0,
         "total_cost_usd": 0.0,
+        "avg_latency_ms": 0,
     }
 
 
@@ -363,7 +394,8 @@ def get_session_stats(session_id: str) -> Dict:
         """
         SELECT operation, SUM(input_tokens), SUM(output_tokens),
                SUM(input_cost_usd), SUM(output_cost_usd), SUM(total_cost_usd),
-               SUM(estimated), COUNT(*)
+               SUM(estimated), COUNT(*), SUM(cached_input_tokens), SUM(cache_write_tokens),
+               AVG(latency_ms)
         FROM llm_usage
         WHERE session_id = ?
         GROUP BY operation
@@ -384,6 +416,9 @@ def get_session_stats(session_id: str) -> Dict:
             total_cost,
             estimated,
             count,
+            cached_input_tokens,
+            cache_write_tokens,
+            avg_latency_ms,
         ) in usage_rows:
             input_tokens = input_tokens or 0
             output_tokens = output_tokens or 0
@@ -391,6 +426,8 @@ def get_session_stats(session_id: str) -> Dict:
             output_cost = output_cost or 0.0
             total_cost = total_cost or 0.0
             estimated = estimated or 0
+            cached_input_tokens = cached_input_tokens or 0
+            cache_write_tokens = cache_write_tokens or 0
 
             operation_counts[operation] = count
             if operation == "chat":
@@ -408,7 +445,13 @@ def get_session_stats(session_id: str) -> Dict:
             stats["output_cost_usd"] += output_cost
             stats["total_cost_usd"] += total_cost
             stats["estimated_usage_events"] += estimated
+            stats["cached_input_tokens"] += cached_input_tokens
+            stats["cache_write_tokens"] += cache_write_tokens
         stats["operation_counts"] = operation_counts
+        stats["avg_latency_ms"] = round(
+            sum((row[10] or 0) for row in usage_rows) / max(1, len(usage_rows)),
+            2,
+        )
     else:
         cursor.execute(
             """

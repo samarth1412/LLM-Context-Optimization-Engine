@@ -4,7 +4,8 @@
     "name": "x-ai/grok-4-fast",
     "max_output": 4000,
     "input_cost_per_1m": 0.2,
-    "output_cost_per_1m": 0.5
+    "output_cost_per_1m": 0.5,
+    "cached_input_cost_per_1m": 0.05
   },
   "turns": 100,
   "messages": 200,
