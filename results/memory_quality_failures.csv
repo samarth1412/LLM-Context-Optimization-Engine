@@ -1,0 +1,25 @@
+case,category,strategy,quality_score,required_recall,conflict_pressure,context_tokens,policy_reason
+long_range_preference,long_range_recall,sliding_window,0.0,0.0,0.0,371,sliding window baseline uses only recent messages
+temporal_update,temporal_update,full_history,0.65,1.0,1.0,1789,full history baseline includes all stored messages
+temporal_update,temporal_update,sliding_window,0.0,0.0,0.0,371,sliding window baseline uses only recent messages
+temporal_update,temporal_update,retrieval,0.65,1.0,1.0,431,fixed policy: retrieval
+temporal_update,temporal_update,hybrid,0.65,1.0,1.0,442,fixed policy: hybrid
+multi_hop_project_state,multi_hop,sliding_window,0.0,0.0,0.0,371,sliding window baseline uses only recent messages
+distractor_retrieval_noise,retrieval_noise,full_history,0.65,1.0,1.0,2129,full history baseline includes all stored messages
+distractor_retrieval_noise,retrieval_noise,sliding_window,0.0,0.0,0.0,371,sliding window baseline uses only recent messages
+distractor_retrieval_noise,retrieval_noise,retrieval,0.65,1.0,1.0,484,fixed policy: retrieval
+distractor_retrieval_noise,retrieval_noise,hybrid,0.65,1.0,1.0,495,fixed policy: hybrid
+distractor_retrieval_noise,retrieval_noise,adaptive,0.65,1.0,1.0,484,memory/fact query with retrieved evidence: use retrieved facts plus recent context
+similar_entity_confusion,entity_disambiguation,full_history,0.65,1.0,1.0,2134,full history baseline includes all stored messages
+similar_entity_confusion,entity_disambiguation,sliding_window,0.0,0.0,0.0,371,sliding window baseline uses only recent messages
+similar_entity_confusion,entity_disambiguation,summary,0.65,1.0,1.0,391,fixed policy: summary
+similar_entity_confusion,entity_disambiguation,retrieval,0.65,1.0,1.0,457,fixed policy: retrieval
+similar_entity_confusion,entity_disambiguation,hybrid,0.65,1.0,1.0,477,fixed policy: hybrid
+similar_entity_confusion,entity_disambiguation,adaptive,0.65,1.0,1.0,457,memory/fact query with retrieved evidence: use retrieved facts plus recent context
+recent_override,recent_update,full_history,0.65,1.0,1.0,2140,full history baseline includes all stored messages
+recent_override,recent_update,summary,0.65,1.0,1.0,375,fixed policy: summary
+recent_override,recent_update,retrieval,0.65,1.0,1.0,425,fixed policy: retrieval
+recent_override,recent_update,hybrid,0.65,1.0,1.0,434,fixed policy: hybrid
+recent_override,recent_update,adaptive,0.65,1.0,1.0,375,current-state query: prefer summary plus recent context over broad retrieval
+summary_drift_missing_constraint,summary_drift,sliding_window,0.0,0.0,0.0,371,sliding window baseline uses only recent messages
+summary_drift_missing_constraint,summary_drift,summary,0.0,0.0,0.0,382,fixed policy: summary

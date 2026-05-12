@@ -240,6 +240,82 @@ def _filter_retrieved(items: Optional[List[Dict]]) -> List[Dict]:
     return [item for item in items if float(item.get("score", 0) or 0) >= RETRIEVAL_MIN_SCORE]
 
 
+def _policy_decision(
+    selected_policy: str,
+    query: Optional[str],
+    retrieved: Optional[List[Dict]],
+) -> Dict:
+    intent = _query_intent(query)
+    strong_retrieval = bool(
+        retrieved and float(retrieved[0].get("score", 0) or 0) >= RETRIEVAL_MIN_SCORE
+    )
+
+    include_retrieval = bool(selected_policy in {"retrieval", "hybrid"} and retrieved)
+    include_summary = selected_policy in {"summary", "hybrid"}
+    reason = f"fixed policy: {selected_policy}"
+
+    if selected_policy == "full_history":
+        return {
+            "policy": selected_policy,
+            "include_summary": False,
+            "include_retrieval": False,
+            "intent": intent,
+            "strong_retrieval": strong_retrieval,
+            "top_retrieval_score": float(retrieved[0].get("score", 0) or 0) if retrieved else 0.0,
+            "reason": "full history baseline includes all stored messages",
+        }
+
+    if selected_policy == "sliding_window":
+        return {
+            "policy": selected_policy,
+            "include_summary": False,
+            "include_retrieval": False,
+            "intent": intent,
+            "strong_retrieval": strong_retrieval,
+            "top_retrieval_score": float(retrieved[0].get("score", 0) or 0) if retrieved else 0.0,
+            "reason": "sliding window baseline uses only recent messages",
+        }
+
+    if selected_policy == "adaptive":
+        include_retrieval = bool(
+            query
+            and retrieved
+            and not intent["current_state"]
+            and (intent["memory"] or intent["broad"] or strong_retrieval)
+        )
+        include_summary = intent["broad"] or intent["current_state"] or not include_retrieval or not query
+
+        if intent["current_state"]:
+            reason = "current-state query: prefer summary plus recent context over broad retrieval"
+        elif include_retrieval and not include_summary:
+            reason = "memory/fact query with retrieved evidence: use retrieved facts plus recent context"
+        elif include_retrieval and include_summary:
+            reason = "broad memory query: combine summary and retrieval evidence"
+        else:
+            reason = "no strong retrieval signal: use summary plus recent context"
+
+    return {
+        "policy": selected_policy,
+        "include_summary": include_summary,
+        "include_retrieval": include_retrieval,
+        "intent": intent,
+        "strong_retrieval": strong_retrieval,
+        "top_retrieval_score": float(retrieved[0].get("score", 0) or 0) if retrieved else 0.0,
+        "reason": reason,
+    }
+
+
+def explain_policy(
+    session_id: str,
+    query: Optional[str] = None,
+    policy: Optional[str] = None,
+    retrieval_k: int = RETRIEVAL_TOP_K,
+) -> Dict:
+    selected_policy = _normalize_policy(policy)
+    retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
+    return _policy_decision(selected_policy, query, retrieved)
+
+
 def build_context(
     session_id: str,
     model: Optional[str] = None,
@@ -262,14 +338,20 @@ def build_context(
     if selected_policy == "full_history":
         messages = get_all_messages(session_id)
         messages = [compress_if_needed(msg, session_id, model) for msg in messages]
-        retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
-        return [_system_message(session_id, retrieved=retrieved), *messages]
+        return [_system_message(session_id), *messages]
 
     if total_messages <= RECENT_MESSAGE_COUNT:
         messages = get_all_messages(session_id)
         messages = [compress_if_needed(msg, session_id, model) for msg in messages]
         retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
-        return [_system_message(session_id, retrieved=retrieved), *messages]
+        decision = _policy_decision(selected_policy, query, retrieved)
+        return [
+            _system_message(
+                session_id,
+                retrieved=retrieved if decision["include_retrieval"] else None,
+            ),
+            *messages,
+        ]
 
     old_message_count = total_messages - RECENT_MESSAGE_COUNT
     logger.info(
@@ -286,21 +368,9 @@ def build_context(
         return [_system_message(session_id), *recent_messages]
 
     retrieved = _filter_retrieved(retrieve(session_id, query, top_k=retrieval_k)) if query else []
-    intent = _query_intent(query)
-    strong_retrieval = bool(retrieved and float(retrieved[0].get("score", 0) or 0) >= RETRIEVAL_MIN_SCORE)
-
-    include_retrieval = selected_policy in {"retrieval", "hybrid"}
-    include_summary = selected_policy in {"summary", "hybrid"}
-
-    if selected_policy == "adaptive":
-        include_retrieval = bool(
-            query
-            and not intent["current_state"]
-            and (intent["memory"] or intent["broad"] or strong_retrieval)
-        )
-        # Broad or ambiguous turns need global state; high-confidence factoid
-        # retrieval can skip the summary and save prompt tokens.
-        include_summary = intent["broad"] or intent["current_state"] or not include_retrieval or not query
+    decision = _policy_decision(selected_policy, query, retrieved)
+    include_summary = bool(decision["include_summary"])
+    include_retrieval = bool(decision["include_retrieval"])
 
     summary = None
     if include_summary:
@@ -350,6 +420,7 @@ def context_preview(
     return {
         "session_id": session_id,
         "policy": _normalize_policy(policy),
+        "policy_decision": explain_policy(session_id, query=query, policy=policy),
         "message_count": len(messages),
         "context_tokens": sum(token_counts),
         "messages": [

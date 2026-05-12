@@ -34,13 +34,13 @@ The system also tracks **foreground vs background** token/cost usage (chat calls
 - **Token-aware context builder** (`context.py`)
 - **Incremental summarization with caching** (older turns summarized, recent turns preserved verbatim)
 - **Adaptive context policy** (`full_history`, `sliding_window`, `summary`, `retrieval`, `hybrid`, `adaptive`)
-- **Semantic memory retrieval module** (`semantic_memory.py`) with stable hash vectors + BM25 hybrid top-k retrieval
+- **Semantic memory retrieval module** (`semantic_memory.py`) with deterministic local hash vectors + BM25 hybrid top-k retrieval
 - **Model-aware token counting** (tiktoken + fallback)
 - **Usage & cost ledger** for chat, background memory operations, prompt-cache tokens, and latency (`llm_usage` table)
 - **Context preview endpoint** (inspect what’s actually sent to the LLM)
 - **Session stats endpoint** (tokens + cost breakdown)
 - **Benchmark harness** with exports to **JSON/CSV/PNG** (`benchmark.py`)
-- **Memory-quality evaluation harness** with exports to **JSON/CSV** (`eval_memory_quality.py`)
+- **Memory-quality evaluation harness** with exports to **JSON/CSV/failure CSV/PNG** (`eval_memory_quality.py`)
 - **Live model-answer evaluation harness** with exports to **JSON/CSV** (`eval_model_answers.py`)
 - **Long-session recall script** scaffold (`eval_long_memory.py`)
 - **OpenAI, Gemini, OpenRouter-compatible providers** + **deterministic mock provider** (`mock/echo`) for offline tests
@@ -171,26 +171,35 @@ python eval_memory_quality.py --json --export
 
 Run configuration:
 - Model: `mock/echo`
-- Cases: long-range preference, temporal update, multi-hop project state, abstention/no-evidence
+- Cases: 8 stress cases covering long-range recall, temporal updates, multi-hop recall, abstention, retrieval noise, near-entity confusion, recent overrides, and summary drift
 - Metric: context evidence quality before the LLM call
 
-| Strategy | Mean quality | Required recall | Conflict pressure | Mean context tokens | Quality / 1k tokens |
-|---------|-------------:|----------------:|------------------:|--------------------:|--------------------:|
-| `full_history` | 0.9125 | 1.0000 | 0.2500 | 1,832.0 | 0.4981 |
-| `sliding_window` | 0.5000 | 0.5000 | 0.0000 | 371.0 | 0.5000 |
-| `summary` | 1.0000 | 1.0000 | 0.0000 | 384.5 | 1.0000 |
-| `retrieval` | 0.9125 | 1.0000 | 0.2500 | 409.3 | 0.9125 |
-| `hybrid` | 0.9125 | 1.0000 | 0.2500 | 422.8 | 0.9125 |
-| `adaptive` | 1.0000 | 1.0000 | 0.0000 | 397.0 | 1.0000 |
+| Strategy | Mean quality | Required recall | Conflict pressure | Mean context tokens | Token reduction vs full | Failures |
+|---------|-------------:|----------------:|------------------:|--------------------:|------------------------:|---------:|
+| `full_history` | 0.8250 | 1.0000 | 0.5000 | 1,964.9 | 0.00% | 4 |
+| `sliding_window` | 0.2500 | 0.2500 | 0.0000 | 370.4 | 81.15% | 6 |
+| `summary` | 0.7875 | 0.8750 | 0.2500 | 383.5 | 80.48% | 3 |
+| `retrieval` | 0.8250 | 1.0000 | 0.5000 | 429.3 | 78.15% | 4 |
+| `hybrid` | 0.8250 | 1.0000 | 0.5000 | 442.4 | 77.49% | 4 |
+| `adaptive` | 0.8688 | 1.0000 | 0.3750 | 418.3 | 78.71% | 3 |
+
+Interpretation:
+- `adaptive` has the best mean quality in this harder offline suite while using about 79% fewer context tokens than full history.
+- `full_history`, `retrieval`, and `hybrid` keep recall high, but they also carry stale or distracting evidence into the prompt.
+- `summary` is efficient, but the summary-drift case shows how a missing early constraint can erase required evidence.
+- `sliding_window` is cheap, but it fails long-range and multi-hop recall by design.
+- The suite is intentionally not perfect: failures are exported and should be used in the article as evidence of tradeoffs, not hidden.
 
 Exported artifacts:
 - `results/memory_quality.json`
 - `results/memory_quality.csv`
+- `results/memory_quality_failures.csv`
+- `results/memory_quality_pareto.png`
 
 ---
 
 ## Evaluation
-This repo includes two evaluation paths:
+This repo includes three evaluation paths:
 
 ```bash
 python eval_long_memory.py --model mock/echo
@@ -207,12 +216,18 @@ Current memory-quality tasks:
 - **Temporal update handling** with stale-evidence pressure
 - **Multi-hop project state recall**
 - **Abstention/no-evidence behavior**
+- **Distractor retrieval noise**
+- **Similar-entity disambiguation**
+- **Recent override vs stale summary**
+- **Summary drift with a missing early constraint**
 
 Metrics:
 - **Required recall**: whether required evidence appears in the assembled context
 - **Conflict pressure**: whether stale or contradictory evidence appears
 - **Quality score**: recall penalized by conflict pressure
 - **Mean context tokens**: input-token footprint per strategy
+- **Failure count**: cases where the assembled context is not perfect
+- **Policy reason**: explanation for why the adaptive policy selected summary, retrieval, or both
 
 ### Live model answer results
 Generated with:
@@ -249,6 +264,8 @@ python eval_model_answers.py --model google/gemini-3.1-flash-lite --strategies f
 |------|----------|--------:|-------------------------------:|-----------------------:|
 | `openai/gpt-4o-mini` | `adaptive` | 1.0000 | 76.69% | 75.36% |
 | `google/gemini-3.1-flash-lite` | `adaptive` | 1.0000 | 76.16% | 74.20% |
+
+These live-model results are useful as a provider sanity check, not as the main research claim. The live set is intentionally small and currently too easy: both OpenAI and Gemini preserve answer quality for the stronger policies. The harder offline memory-quality suite above is the better article anchor because it exposes failure modes, stale-evidence pressure, and policy tradeoffs.
 
 Exported artifacts:
 - `results/model_answer_eval.json`
@@ -334,8 +351,9 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 
 - **Full history** is the most expensive because each request grows with the entire conversation.
 - **Sliding window** is the cheapest because it caps context length (but it would forget older facts by design).
-- **Incremental summary** lands in between: it reduces long-history growth while paying **background summarization overhead** (tracked as `bg_input`/`bg_output`), which is why it’s more expensive than a pure sliding window in this run.
-- **Adaptive context** is the offline memory-quality harness it matches summary-level evidence quality while avoiding stale retrieval evidence on current-state questions.
+- **Incremental summary** lands in between: it reduces long-history growth while paying **background summarization overhead** (tracked as `bg_input`/`bg_output`), which is why it is more expensive than a pure sliding window in this run.
+- **Adaptive context** is the strongest offline policy on the hardened memory-quality suite: `0.8688` mean quality with `78.71%` fewer context tokens than full history.
+- **Failure analysis matters**: adaptive still fails on noisy retrieval/entity-confusion cases and can carry stale summary evidence on recent overrides. That is the main research signal: cost reduction is easy, reliable memory selection is the hard part.
 
 
 ## Repo Layout

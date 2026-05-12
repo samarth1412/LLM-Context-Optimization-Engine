@@ -1,25 +1,49 @@
-case,strategy,context_tokens,estimated_input_cost_usd,message_count,required_recall,conflict_pressure,quality_score
-long_range_preference,full_history,1829,0.0,81,1.0,0.0,1.0
-long_range_preference,sliding_window,371,0.0,16,0.0,0.0,0.0
-long_range_preference,summary,382,0.0,16,1.0,0.0,1.0
-long_range_preference,retrieval,404,0.0,16,1.0,0.0,1.0
-long_range_preference,hybrid,415,0.0,16,1.0,0.0,1.0
-long_range_preference,adaptive,404,0.0,16,1.0,0.0,1.0
-temporal_update,full_history,1849,0.0,81,1.0,1.0,0.65
-temporal_update,sliding_window,371,0.0,16,1.0,0.0,1.0
-temporal_update,summary,382,0.0,16,1.0,0.0,1.0
-temporal_update,retrieval,431,0.0,16,1.0,1.0,0.65
-temporal_update,hybrid,442,0.0,16,1.0,1.0,0.65
-temporal_update,adaptive,382,0.0,16,1.0,0.0,1.0
-multi_hop_project_state,full_history,1849,0.0,81,1.0,0.0,1.0
-multi_hop_project_state,sliding_window,371,0.0,16,0.0,0.0,0.0
-multi_hop_project_state,summary,392,0.0,16,1.0,0.0,1.0
-multi_hop_project_state,retrieval,431,0.0,16,1.0,0.0,1.0
-multi_hop_project_state,hybrid,452,0.0,16,1.0,0.0,1.0
-multi_hop_project_state,adaptive,431,0.0,16,1.0,0.0,1.0
-abstention_no_evidence,full_history,1801,0.0,81,1.0,0.0,1.0
-abstention_no_evidence,sliding_window,371,0.0,16,1.0,0.0,1.0
-abstention_no_evidence,summary,382,0.0,16,1.0,0.0,1.0
-abstention_no_evidence,retrieval,371,0.0,16,1.0,0.0,1.0
-abstention_no_evidence,hybrid,382,0.0,16,1.0,0.0,1.0
-abstention_no_evidence,adaptive,371,0.0,16,1.0,0.0,1.0
+case,category,strategy,context_tokens,estimated_input_cost_usd,message_count,included_summary,included_retrieval,top_retrieval_score,policy_reason,required_recall,conflict_pressure,quality_score
+long_range_preference,long_range_recall,full_history,1796,0.0,81,False,False,0.8937,full history baseline includes all stored messages,1.0,0.0,1.0
+long_range_preference,long_range_recall,sliding_window,371,0.0,16,False,False,0.8937,sliding window baseline uses only recent messages,0.0,0.0,0.0
+long_range_preference,long_range_recall,summary,382,0.0,16,True,False,0.8937,fixed policy: summary,1.0,0.0,1.0
+long_range_preference,long_range_recall,retrieval,404,0.0,16,False,True,0.8937,fixed policy: retrieval,1.0,0.0,1.0
+long_range_preference,long_range_recall,hybrid,415,0.0,16,True,True,0.8937,fixed policy: hybrid,1.0,0.0,1.0
+long_range_preference,long_range_recall,adaptive,404,0.0,16,False,True,0.8937,memory/fact query with retrieved evidence: use retrieved facts plus recent context,1.0,0.0,1.0
+temporal_update,temporal_update,full_history,1789,0.0,81,False,False,0.8562,full history baseline includes all stored messages,1.0,1.0,0.65
+temporal_update,temporal_update,sliding_window,371,0.0,16,False,False,0.8562,sliding window baseline uses only recent messages,0.0,0.0,0.0
+temporal_update,temporal_update,summary,382,0.0,16,True,False,0.8562,fixed policy: summary,1.0,0.0,1.0
+temporal_update,temporal_update,retrieval,431,0.0,16,False,True,0.8562,fixed policy: retrieval,1.0,1.0,0.65
+temporal_update,temporal_update,hybrid,442,0.0,16,True,True,0.8562,fixed policy: hybrid,1.0,1.0,0.65
+temporal_update,temporal_update,adaptive,382,0.0,16,True,False,0.8562,current-state query: prefer summary plus recent context over broad retrieval,1.0,0.0,1.0
+multi_hop_project_state,multi_hop,full_history,1789,0.0,81,False,False,0.7021,full history baseline includes all stored messages,1.0,0.0,1.0
+multi_hop_project_state,multi_hop,sliding_window,371,0.0,16,False,False,0.7021,sliding window baseline uses only recent messages,0.0,0.0,0.0
+multi_hop_project_state,multi_hop,summary,392,0.0,16,True,False,0.7021,fixed policy: summary,1.0,0.0,1.0
+multi_hop_project_state,multi_hop,retrieval,431,0.0,16,False,True,0.7021,fixed policy: retrieval,1.0,0.0,1.0
+multi_hop_project_state,multi_hop,hybrid,452,0.0,16,True,True,0.7021,fixed policy: hybrid,1.0,0.0,1.0
+multi_hop_project_state,multi_hop,adaptive,431,0.0,16,False,True,0.7021,memory/fact query with retrieved evidence: use retrieved facts plus recent context,1.0,0.0,1.0
+abstention_no_evidence,abstention,full_history,1801,0.0,81,False,False,0.0,full history baseline includes all stored messages,1.0,0.0,1.0
+abstention_no_evidence,abstention,sliding_window,371,0.0,16,False,False,0.0,sliding window baseline uses only recent messages,1.0,0.0,1.0
+abstention_no_evidence,abstention,summary,382,0.0,16,True,False,0.0,fixed policy: summary,1.0,0.0,1.0
+abstention_no_evidence,abstention,retrieval,371,0.0,16,False,False,0.0,fixed policy: retrieval,1.0,0.0,1.0
+abstention_no_evidence,abstention,hybrid,382,0.0,16,True,False,0.0,fixed policy: hybrid,1.0,0.0,1.0
+abstention_no_evidence,abstention,adaptive,382,0.0,16,True,False,0.0,no strong retrieval signal: use summary plus recent context,1.0,0.0,1.0
+distractor_retrieval_noise,retrieval_noise,full_history,2129,0.0,97,False,False,0.8507,full history baseline includes all stored messages,1.0,1.0,0.65
+distractor_retrieval_noise,retrieval_noise,sliding_window,371,0.0,16,False,False,0.8507,sliding window baseline uses only recent messages,0.0,0.0,0.0
+distractor_retrieval_noise,retrieval_noise,summary,382,0.0,16,True,False,0.8507,fixed policy: summary,1.0,0.0,1.0
+distractor_retrieval_noise,retrieval_noise,retrieval,484,0.0,16,False,True,0.8507,fixed policy: retrieval,1.0,1.0,0.65
+distractor_retrieval_noise,retrieval_noise,hybrid,495,0.0,16,True,True,0.8507,fixed policy: hybrid,1.0,1.0,0.65
+distractor_retrieval_noise,retrieval_noise,adaptive,484,0.0,16,False,True,0.8507,memory/fact query with retrieved evidence: use retrieved facts plus recent context,1.0,1.0,0.65
+similar_entity_confusion,entity_disambiguation,full_history,2134,0.0,97,False,False,0.8064,full history baseline includes all stored messages,1.0,1.0,0.65
+similar_entity_confusion,entity_disambiguation,sliding_window,371,0.0,16,False,False,0.8064,sliding window baseline uses only recent messages,0.0,0.0,0.0
+similar_entity_confusion,entity_disambiguation,summary,391,0.0,16,True,False,0.8064,fixed policy: summary,1.0,1.0,0.65
+similar_entity_confusion,entity_disambiguation,retrieval,457,0.0,16,False,True,0.8064,fixed policy: retrieval,1.0,1.0,0.65
+similar_entity_confusion,entity_disambiguation,hybrid,477,0.0,16,True,True,0.8064,fixed policy: hybrid,1.0,1.0,0.65
+similar_entity_confusion,entity_disambiguation,adaptive,457,0.0,16,False,True,0.8064,memory/fact query with retrieved evidence: use retrieved facts plus recent context,1.0,1.0,0.65
+recent_override,recent_update,full_history,2140,0.0,97,False,False,0.8562,full history baseline includes all stored messages,1.0,1.0,0.65
+recent_override,recent_update,sliding_window,366,0.0,16,False,False,0.8562,sliding window baseline uses only recent messages,1.0,0.0,1.0
+recent_override,recent_update,summary,375,0.0,16,True,False,0.8562,fixed policy: summary,1.0,1.0,0.65
+recent_override,recent_update,retrieval,425,0.0,16,False,True,0.8562,fixed policy: retrieval,1.0,1.0,0.65
+recent_override,recent_update,hybrid,434,0.0,16,True,True,0.8562,fixed policy: hybrid,1.0,1.0,0.65
+recent_override,recent_update,adaptive,375,0.0,16,True,False,0.8562,current-state query: prefer summary plus recent context over broad retrieval,1.0,1.0,0.65
+summary_drift_missing_constraint,summary_drift,full_history,2141,0.0,97,False,False,0.8405,full history baseline includes all stored messages,1.0,0.0,1.0
+summary_drift_missing_constraint,summary_drift,sliding_window,371,0.0,16,False,False,0.8405,sliding window baseline uses only recent messages,0.0,0.0,0.0
+summary_drift_missing_constraint,summary_drift,summary,382,0.0,16,True,False,0.8405,fixed policy: summary,0.0,0.0,0.0
+summary_drift_missing_constraint,summary_drift,retrieval,431,0.0,16,False,True,0.8405,fixed policy: retrieval,1.0,0.0,1.0
+summary_drift_missing_constraint,summary_drift,hybrid,442,0.0,16,True,True,0.8405,fixed policy: hybrid,1.0,0.0,1.0
+summary_drift_missing_constraint,summary_drift,adaptive,431,0.0,16,False,True,0.8405,memory/fact query with retrieved evidence: use retrieved facts plus recent context,1.0,0.0,1.0

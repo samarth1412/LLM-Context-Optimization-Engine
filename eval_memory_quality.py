@@ -3,6 +3,7 @@ import csv
 import json
 import logging
 import os
+import re
 import statistics
 import tempfile
 from dataclasses import asdict, dataclass
@@ -36,20 +37,27 @@ class SummaryFact:
 @dataclass
 class MemoryCase:
     name: str
+    category: str
     query: str
     messages: List[Dict]
     summary_facts: List[SummaryFact]
     required_terms: List[str]
     conflict_terms: List[str]
+    note: str = ""
 
 
 @dataclass
 class CaseResult:
     case: str
+    category: str
     strategy: str
     context_tokens: int
     estimated_input_cost_usd: float
     message_count: int
+    included_summary: bool
+    included_retrieval: bool
+    top_retrieval_score: float
+    policy_reason: str
     required_recall: float
     conflict_pressure: float
     quality_score: float
@@ -77,6 +85,7 @@ def build_cases() -> List[MemoryCase]:
     return [
         MemoryCase(
             name="long_range_preference",
+            category="long_range_recall",
             query="What is the user's favorite tea?",
             messages=_messages(
                 80,
@@ -89,9 +98,11 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["jasmine"],
             conflict_terms=[],
+            note="Early fact is outside the recent window.",
         ),
         MemoryCase(
             name="temporal_update",
+            category="temporal_update",
             query="What is the current preferred editor?",
             messages=_messages(
                 80,
@@ -106,9 +117,11 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["zed"],
             conflict_terms=["preferred editor used to be vim"],
+            note="Older stale fact is replaced before the recent window.",
         ),
         MemoryCase(
             name="multi_hop_project_state",
+            category="multi_hop",
             query="What logo does Zephyr use?",
             messages=_messages(
                 80,
@@ -123,14 +136,93 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["zephyr", "dragonfly"],
             conflict_terms=[],
+            note="Answer requires connecting codename and later brand fact.",
         ),
         MemoryCase(
             name="abstention_no_evidence",
+            category="abstention",
             query="What is the user's passport number?",
             messages=_messages(80, {}),
             summary_facts=[],
             required_terms=[],
             conflict_terms=["passport number is"],
+            note="Correct behavior is to avoid inventing a missing private fact.",
+        ),
+        MemoryCase(
+            name="distractor_retrieval_noise",
+            category="retrieval_noise",
+            query="What color is the Vega release badge?",
+            messages=_messages(
+                96,
+                {
+                    6: "Project memory: Vega release badge color is teal.",
+                    18: "Distractor note: Orion release badge color is amber.",
+                    38: "Distractor note: Vega release checklist mentions badges but not colors.",
+                    60: "Distractor note: badge color decisions are often deferred.",
+                },
+            ),
+            summary_facts=[
+                SummaryFact(6, "vega_badge", "Vega release badge color is teal.")
+            ],
+            required_terms=["teal"],
+            conflict_terms=["amber", "deferred"],
+            note="Lexical retrieval can pull high-overlap but irrelevant badge snippets.",
+        ),
+        MemoryCase(
+            name="similar_entity_confusion",
+            category="entity_disambiguation",
+            query="Which launch region belongs to Project Atlas?",
+            messages=_messages(
+                96,
+                {
+                    10: "Project memory: Project Atlas launches in the north region.",
+                    28: "Project memory: Project Atala launches in the south region.",
+                    52: "Project memory: Project Atlas support tickets use the amber queue.",
+                },
+            ),
+            summary_facts=[
+                SummaryFact(10, "atlas_region", "Project Atlas launches in the north region."),
+                SummaryFact(28, "atala_region", "Project Atala launches in the south region."),
+            ],
+            required_terms=["north"],
+            conflict_terms=["south"],
+            note="Near-name entity collision tests whether context includes confusing neighbors.",
+        ),
+        MemoryCase(
+            name="recent_override",
+            category="recent_update",
+            query="What is the current escalation channel?",
+            messages=_messages(
+                96,
+                {
+                    8: "Old operations memory: the escalation channel is email.",
+                    88: "Updated operations memory: the current escalation channel is PagerDuty.",
+                },
+            ),
+            summary_facts=[
+                SummaryFact(8, "escalation_channel", "The escalation channel is email."),
+            ],
+            required_terms=["pagerduty"],
+            conflict_terms=["escalation channel is email"],
+            note="Recent message overrides a stale summary fact.",
+        ),
+        MemoryCase(
+            name="summary_drift_missing_constraint",
+            category="summary_drift",
+            query="What constraint must the rollout preserve?",
+            messages=_messages(
+                96,
+                {
+                    12: "Rollout memory: the rollout must preserve audit logs.",
+                    34: "Rollout memory: the rollout also needs faster dashboard load time.",
+                },
+            ),
+            summary_facts=[
+                SummaryFact(34, "rollout_speed", "The rollout needs faster dashboard load time."),
+            ],
+            required_terms=["audit logs"],
+            conflict_terms=[],
+            note="Simulates summary drift by omitting a critical early constraint.",
         ),
     ]
 
@@ -163,7 +255,7 @@ def _populate_case(session_id: str, case: MemoryCase) -> None:
 def _score_context(case: MemoryCase, text: str) -> Dict[str, float]:
     lower = text.lower()
     if case.required_terms:
-        required_recall = sum(1 for term in case.required_terms if term.lower() in lower) / len(
+        required_recall = sum(1 for term in case.required_terms if _contains_term(lower, term)) / len(
             case.required_terms
         )
     else:
@@ -171,7 +263,7 @@ def _score_context(case: MemoryCase, text: str) -> Dict[str, float]:
 
     if case.conflict_terms:
         conflict_pressure = sum(
-            1 for term in case.conflict_terms if term.lower() in lower
+            1 for term in case.conflict_terms if _contains_term(lower, term)
         ) / len(case.conflict_terms)
     else:
         conflict_pressure = 0.0
@@ -182,6 +274,15 @@ def _score_context(case: MemoryCase, text: str) -> Dict[str, float]:
         "conflict_pressure": round(conflict_pressure, 4),
         "quality_score": round(quality_score, 4),
     }
+
+
+def _contains_term(lower_text: str, term: str) -> bool:
+    normalized = term.lower().strip()
+    if not normalized:
+        return False
+    if " " in normalized:
+        return normalized in lower_text
+    return re.search(rf"\b{re.escape(normalized)}\b", lower_text) is not None
 
 
 def run_eval(model: str = "mock/echo", strategies: List[str] = None) -> Dict:
@@ -206,12 +307,18 @@ def run_eval(model: str = "mock/echo", strategies: List[str] = None) -> Dict:
                         query=case.query,
                         policy=strategy,
                     )
+                    decision = context_engine.explain_policy(
+                        session_id,
+                        query=case.query,
+                        policy=strategy,
+                    )
                     context_text = "\n".join(msg["content"] for msg in messages)
                     tokens = estimate_messages_tokens(messages, model)
                     score = _score_context(case, context_text)
                     rows.append(
                         CaseResult(
                             case=case.name,
+                            category=case.category,
                             strategy=strategy,
                             context_tokens=tokens,
                             estimated_input_cost_usd=round(
@@ -219,6 +326,10 @@ def run_eval(model: str = "mock/echo", strategies: List[str] = None) -> Dict:
                                 8,
                             ),
                             message_count=len(messages),
+                            included_summary=bool(decision["include_summary"]),
+                            included_retrieval=bool(decision["include_retrieval"]),
+                            top_retrieval_score=round(float(decision["top_retrieval_score"]), 4),
+                            policy_reason=str(decision["reason"]),
                             required_recall=score["required_recall"],
                             conflict_pressure=score["conflict_pressure"],
                             quality_score=score["quality_score"],
@@ -254,15 +365,39 @@ def run_eval(model: str = "mock/echo", strategies: List[str] = None) -> Dict:
                     ),
                     4,
                 ),
+                "failure_count": sum(1 for row in strategy_rows if row.quality_score < 1.0),
             }
         )
 
+    failures = [
+        {
+            "case": row.case,
+            "category": row.category,
+            "strategy": row.strategy,
+            "quality_score": row.quality_score,
+            "required_recall": row.required_recall,
+            "conflict_pressure": row.conflict_pressure,
+            "context_tokens": row.context_tokens,
+            "policy_reason": row.policy_reason,
+        }
+        for row in rows
+        if row.quality_score < 1.0
+    ]
+
     return {
         "model": model,
-        "cases": [case.name for case in cases],
+        "cases": [
+            {
+                "name": case.name,
+                "category": case.category,
+                "note": case.note,
+            }
+            for case in cases
+        ],
         "strategies": strategies,
         "results": [asdict(row) for row in rows],
         "aggregate": aggregate,
+        "failure_analysis": failures,
     }
 
 
@@ -270,16 +405,23 @@ def export_results(results: Dict, out_dir: str = "results") -> Dict[str, str]:
     os.makedirs(out_dir, exist_ok=True)
     json_path = os.path.join(out_dir, "memory_quality.json")
     csv_path = os.path.join(out_dir, "memory_quality.csv")
+    failures_path = os.path.join(out_dir, "memory_quality_failures.csv")
+    chart_path = os.path.join(out_dir, "memory_quality_pareto.png")
 
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 
     fieldnames = [
         "case",
+        "category",
         "strategy",
         "context_tokens",
         "estimated_input_cost_usd",
         "message_count",
+        "included_summary",
+        "included_retrieval",
+        "top_retrieval_score",
+        "policy_reason",
         "required_recall",
         "conflict_pressure",
         "quality_score",
@@ -290,7 +432,57 @@ def export_results(results: Dict, out_dir: str = "results") -> Dict[str, str]:
         for row in results["results"]:
             writer.writerow({field: row.get(field) for field in fieldnames})
 
-    return {"json": json_path, "csv": csv_path}
+    failure_fieldnames = [
+        "case",
+        "category",
+        "strategy",
+        "quality_score",
+        "required_recall",
+        "conflict_pressure",
+        "context_tokens",
+        "policy_reason",
+    ]
+    with open(failures_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=failure_fieldnames)
+        writer.writeheader()
+        for row in results.get("failure_analysis", []):
+            writer.writerow({field: row.get(field) for field in failure_fieldnames})
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt  # type: ignore
+
+    rows = results["aggregate"]
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for row in rows:
+        ax.scatter(
+            row["mean_context_tokens"],
+            row["mean_quality_score"],
+            s=80,
+        )
+        ax.annotate(
+            row["strategy"],
+            (row["mean_context_tokens"], row["mean_quality_score"]),
+            textcoords="offset points",
+            xytext=(6, 4),
+            fontsize=9,
+        )
+    ax.set_title("Memory quality vs context size")
+    ax.set_xlabel("Mean context tokens")
+    ax.set_ylabel("Mean quality score")
+    ax.set_ylim(-0.05, 1.05)
+    ax.grid(alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(chart_path, dpi=160)
+    plt.close(fig)
+
+    return {
+        "json": json_path,
+        "csv": csv_path,
+        "failures_csv": failures_path,
+        "pareto_png": chart_path,
+    }
 
 
 def main():
