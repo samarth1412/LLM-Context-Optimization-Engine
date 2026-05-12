@@ -42,7 +42,6 @@ The system also tracks **foreground vs background** token/cost usage (chat calls
 - **Benchmark harness** with exports to **JSON/CSV/PNG** (`benchmark.py`)
 - **Memory-quality evaluation harness** with exports to **JSON/CSV/failure CSV/PNG** (`eval_memory_quality.py`)
 - **Live model-answer evaluation harness** with exports to **JSON/CSV** (`eval_model_answers.py`)
-- **Long-session recall script** scaffold (`eval_long_memory.py`)
 - **OpenAI, Gemini, OpenRouter-compatible providers** + **deterministic mock provider** (`mock/echo`) for offline tests
 - **Docker + docker-compose** local deployment
 - **GitHub Actions CI** that runs unit tests, benchmark export, and memory-quality export
@@ -199,16 +198,15 @@ Exported artifacts:
 ---
 
 ## Evaluation
-This repo includes three evaluation paths:
+This repo includes two evaluation paths:
 
 ```bash
-python eval_long_memory.py --model mock/echo
 python eval_memory_quality.py --json --export
 python eval_model_answers.py --model openai/gpt-4o-mini --json --export
 python eval_model_answers.py --model google/gemini-3.1-flash-lite --strategies full_history,sliding_window,summary,adaptive --json --export
 ```
 
-`eval_long_memory.py` is a simple model-response recall scaffold. `eval_memory_quality.py` is the article-oriented harness: it evaluates the context that each policy assembles before the LLM call.
+`eval_memory_quality.py` is the article-oriented harness: it evaluates the context that each policy assembles before the LLM call.
 `eval_model_answers.py` is the optional live-model harness: it calls a real provider model and scores the generated answers for recall, conflict, abstention, token usage, cost, and latency.
 
 Current memory-quality tasks:
@@ -268,8 +266,6 @@ python eval_model_answers.py --model google/gemini-3.1-flash-lite --strategies f
 These live-model results are useful as a provider sanity check, not as the main research claim. The live set is intentionally small and currently too easy: both OpenAI and Gemini preserve answer quality for the stronger policies. The harder offline memory-quality suite above is the better article anchor because it exposes failure modes, stale-evidence pressure, and policy tradeoffs.
 
 Exported artifacts:
-- `results/model_answer_eval.json`
-- `results/model_answer_eval.csv`
 - `results/model_answer_eval_openai_gpt-4o-mini.json`
 - `results/model_answer_eval_openai_gpt-4o-mini.csv`
 - `results/model_answer_eval_google_gemini-3.1-flash-lite.json`
@@ -368,7 +364,6 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 ├── benchmark.py             synthetic benchmark + JSON/CSV/PNG export
 ├── eval_memory_quality.py   offline context-policy quality evaluation
 ├── eval_model_answers.py    live model-answer quality evaluation
-├── eval_long_memory.py      long-session recall evaluation scaffold
 ├── index.html               dashboard UI (context preview + charts)
 ├── tests/                   deterministic unit tests
 ├── Dockerfile
