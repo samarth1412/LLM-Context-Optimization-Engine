@@ -1,0 +1,245 @@
+{
+  "turns": [
+    1000,
+    5000,
+    10000
+  ],
+  "policies": [
+    "full_archive",
+    "sliding_window",
+    "importance"
+  ],
+  "results": [
+    {
+      "turns": 1000,
+      "policy": "full_archive",
+      "selection_budget": 120,
+      "kept_messages": 1000,
+      "kept_tokens": 10394,
+      "critical_facts": 29,
+      "stale_facts": 40,
+      "noise_messages": 931,
+      "critical_recall": 1.0,
+      "stale_retention_rate": 1.0,
+      "noise_retention_rate": 1.0,
+      "retrieval_precision_estimate": 0.029,
+      "mean_kept_importance": 0.0352,
+      "layer_counts": {
+        "archived": 840,
+        "episodic": 32,
+        "semantic": 64,
+        "working": 64
+      },
+      "action_counts": {
+        "evict": 906,
+        "compress": 83,
+        "preserve": 11
+      }
+    },
+    {
+      "turns": 1000,
+      "policy": "sliding_window",
+      "selection_budget": 120,
+      "kept_messages": 120,
+      "kept_tokens": 1208,
+      "critical_facts": 29,
+      "stale_facts": 40,
+      "noise_messages": 931,
+      "critical_recall": 0.3103,
+      "stale_retention_rate": 0.0,
+      "noise_retention_rate": 0.1192,
+      "retrieval_precision_estimate": 0.075,
+      "mean_kept_importance": 0.051,
+      "layer_counts": {
+        "archived": 50,
+        "semantic": 4,
+        "episodic": 2,
+        "working": 64
+      },
+      "action_counts": {
+        "evict": 107,
+        "preserve": 7,
+        "compress": 6
+      }
+    },
+    {
+      "turns": 1000,
+      "policy": "importance",
+      "selection_budget": 120,
+      "kept_messages": 120,
+      "kept_tokens": 1420,
+      "critical_facts": 29,
+      "stale_facts": 40,
+      "noise_messages": 931,
+      "critical_recall": 0.7931,
+      "stale_retention_rate": 0.525,
+      "noise_retention_rate": 0.0816,
+      "retrieval_precision_estimate": 0.1917,
+      "mean_kept_importance": 0.203,
+      "layer_counts": {
+        "episodic": 21,
+        "semantic": 39,
+        "working": 60
+      },
+      "action_counts": {
+        "compress": 56,
+        "preserve": 11,
+        "evict": 53
+      }
+    },
+    {
+      "turns": 5000,
+      "policy": "full_archive",
+      "selection_budget": 300,
+      "kept_messages": 5000,
+      "kept_tokens": 52271,
+      "critical_facts": 103,
+      "stale_facts": 240,
+      "noise_messages": 4657,
+      "critical_recall": 1.0,
+      "stale_retention_rate": 1.0,
+      "noise_retention_rate": 1.0,
+      "retrieval_precision_estimate": 0.0206,
+      "mean_kept_importance": 0.029,
+      "layer_counts": {
+        "archived": 4438,
+        "episodic": 159,
+        "semantic": 339,
+        "working": 64
+      },
+      "action_counts": {
+        "evict": 4632,
+        "compress": 357,
+        "preserve": 11
+      }
+    },
+    {
+      "turns": 5000,
+      "policy": "sliding_window",
+      "selection_budget": 300,
+      "kept_messages": 300,
+      "kept_tokens": 3052,
+      "critical_facts": 103,
+      "stale_facts": 240,
+      "noise_messages": 4657,
+      "critical_recall": 0.165,
+      "stale_retention_rate": 0.0167,
+      "noise_retention_rate": 0.0599,
+      "retrieval_precision_estimate": 0.0567,
+      "mean_kept_importance": 0.0441,
+      "layer_counts": {
+        "archived": 212,
+        "semantic": 17,
+        "episodic": 7,
+        "working": 64
+      },
+      "action_counts": {
+        "evict": 271,
+        "compress": 18,
+        "preserve": 11
+      }
+    },
+    {
+      "turns": 5000,
+      "policy": "importance",
+      "selection_budget": 300,
+      "kept_messages": 300,
+      "kept_tokens": 3900,
+      "critical_facts": 103,
+      "stale_facts": 240,
+      "noise_messages": 4657,
+      "critical_recall": 0.8252,
+      "stale_retention_rate": 0.3458,
+      "noise_retention_rate": 0.0283,
+      "retrieval_precision_estimate": 0.2833,
+      "mean_kept_importance": 0.2881,
+      "layer_counts": {
+        "semantic": 164,
+        "episodic": 76,
+        "working": 60
+      },
+      "action_counts": {
+        "compress": 235,
+        "preserve": 11,
+        "evict": 54
+      }
+    },
+    {
+      "turns": 10000,
+      "policy": "full_archive",
+      "selection_budget": 600,
+      "kept_messages": 10000,
+      "kept_tokens": 104633,
+      "critical_facts": 194,
+      "stale_facts": 492,
+      "noise_messages": 9314,
+      "critical_recall": 1.0,
+      "stale_retention_rate": 1.0,
+      "noise_retention_rate": 1.0,
+      "retrieval_precision_estimate": 0.0194,
+      "mean_kept_importance": 0.0281,
+      "layer_counts": {
+        "archived": 8935,
+        "episodic": 319,
+        "semantic": 682,
+        "working": 64
+      },
+      "action_counts": {
+        "evict": 9284,
+        "compress": 705,
+        "preserve": 11
+      }
+    },
+    {
+      "turns": 10000,
+      "policy": "sliding_window",
+      "selection_budget": 600,
+      "kept_messages": 600,
+      "kept_tokens": 6189,
+      "critical_facts": 194,
+      "stale_facts": 492,
+      "noise_messages": 9314,
+      "critical_recall": 0.1082,
+      "stale_retention_rate": 0.0386,
+      "noise_retention_rate": 0.0601,
+      "retrieval_precision_estimate": 0.035,
+      "mean_kept_importance": 0.0359,
+      "layer_counts": {
+        "archived": 484,
+        "episodic": 16,
+        "semantic": 36,
+        "working": 64
+      },
+      "action_counts": {
+        "evict": 543,
+        "compress": 46,
+        "preserve": 11
+      }
+    },
+    {
+      "turns": 10000,
+      "policy": "importance",
+      "selection_budget": 600,
+      "kept_messages": 600,
+      "kept_tokens": 8033,
+      "critical_facts": 194,
+      "stale_facts": 492,
+      "noise_messages": 9314,
+      "critical_recall": 0.9072,
+      "stale_retention_rate": 0.3659,
+      "noise_retention_rate": 0.0262,
+      "retrieval_precision_estimate": 0.2933,
+      "mean_kept_importance": 0.3014,
+      "layer_counts": {
+        "semantic": 352,
+        "episodic": 188,
+        "working": 60
+      },
+      "action_counts": {
+        "compress": 535,
+        "preserve": 11,
+        "evict": 54
+      }
+    }
+  ]
+}

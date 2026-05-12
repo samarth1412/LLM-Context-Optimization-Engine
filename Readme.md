@@ -36,6 +36,8 @@ The system also tracks **foreground vs background** token/cost usage (chat calls
 - **Adaptive context policy** (`full_history`, `sliding_window`, `summary`, `retrieval`, `hybrid`, `adaptive`)
 - **Semantic memory retrieval module** (`semantic_memory.py`) with BM25, embedding-only, and hybrid retrieval modes
 - **Pluggable embedding backends**: deterministic `mock/hash`, local `bge-small-en-v1.5` / `e5-base-v2`, and API `openai/text-embedding-3-small`
+- **Memory importance scoring** (`memory_importance.py`) using recency, persistence, contradiction risk, retrieval frequency, entity importance, and preference durability
+- **Hierarchical memory metadata**: working memory, episodic memory, semantic memory, and archived retrieval memory with preserve/compress/evict actions
 - **Model-aware token counting** (tiktoken + fallback)
 - **Usage & cost ledger** for chat, background memory operations, prompt-cache tokens, and latency (`llm_usage` table)
 - **Context preview endpoint** (inspect what’s actually sent to the LLM)
@@ -43,10 +45,11 @@ The system also tracks **foreground vs background** token/cost usage (chat calls
 - **Benchmark harness** with exports to **JSON/CSV/PNG** (`benchmark.py`)
 - **Retrieval-quality evaluation harness** with Recall@K, MRR, Precision@K, distractor hit rate, stale evidence rate, and heatmap export (`eval_retrieval_quality.py`)
 - **Memory-quality evaluation harness** with exports to **JSON/CSV/failure CSV/PNG** (`eval_memory_quality.py`)
+- **Large-scale synthetic memory evaluation** with 1k/5k/10k-turn sessions (`eval_memory_scaling.py`)
 - **Live model-answer evaluation harness** with exports to **JSON/CSV** (`eval_model_answers.py`)
 - **OpenAI, Gemini, OpenRouter-compatible providers** + **deterministic mock provider** (`mock/echo`) for offline tests
 - **Docker + docker-compose** local deployment
-- **GitHub Actions CI** that runs unit tests, benchmark export, retrieval-quality export, and memory-quality export
+- **GitHub Actions CI** that runs unit tests, benchmark export, retrieval-quality export, memory-quality export, and scaling export
 
 ---
 
@@ -67,6 +70,7 @@ ContextFlow AI makes these tradeoffs explicit and measurable.
 - What is the **true cost** once you include **background summarization/compression overhead**?
 - How do we make memory strategies **inspectable** (context preview) rather than opaque?
 - When does **retrieval** help vs harm (irrelevant snippets, prompt dilution)?
+- Which memories should be **preserved, compressed, or evicted** under fixed memory budgets?
 - How should we evaluate long-memory behaviors (recall, contradiction, drift) in a repeatable harness?
 
 ---
@@ -83,6 +87,7 @@ flowchart LR
   CE --> W[Recent Message Window]
   CE --> S[Incremental Summary Store]
   CE --> R[Semantic Memory Retrieval]
+  CE --> M[Importance + Hierarchical Memory]
   CE --> U[Usage/Cost Ledger]
   CE --> B[Benchmark Harness]
 
@@ -116,6 +121,38 @@ The project currently compares:
 - **`adaptive`**: query-aware policy that selects summary, retrieval, or both based on intent
 
 The synthetic cost benchmark still reports the original three token/cost baselines. The retrieval-quality harness evaluates BM25 vs embedding vs hybrid retrieval. The memory-quality harness evaluates all six context policies.
+
+---
+
+## Hierarchical Memory
+
+Each indexed message now receives memory metadata:
+
+- **Working memory**: recent turns that should remain directly available.
+- **Episodic memory**: events, releases, incidents, decisions, and temporal updates.
+- **Semantic memory**: durable facts, user preferences, entities, constraints, and project state.
+- **Archived retrieval memory**: low-value or stale material that should be retrieval-only or evicted from active context.
+
+The importance scorer uses:
+
+- **Recency**
+- **Persistence**
+- **Contradiction risk**
+- **Retrieval frequency**
+- **Entity importance**
+- **User preference durability**
+
+The resulting action is one of:
+
+- **Preserve**: keep as high-value memory.
+- **Compress**: retain as summarized/compact memory.
+- **Evict**: remove from active memory selection.
+
+Inspect a session's hierarchy with:
+
+```text
+GET /api/memory/{session}
+```
 
 ---
 
@@ -197,15 +234,50 @@ Exported artifacts:
 - `results/memory_quality_failures.csv`
 - `results/memory_quality_pareto.png`
 
+### Large-scale memory scaling results
+Generated with:
+
+```bash
+python eval_memory_scaling.py --turns 1000,5000,10000 --json --export
+```
+
+Run configuration:
+- Synthetic sessions: 1k, 5k, and 10k turns
+- Stressors: retrieval noise, conflicting updates, evolving preferences, entity drift, and forgotten constraints
+- Compared policies: `full_archive`, `sliding_window`, `importance`
+
+| Turns | Policy | Critical recall | Stale retention | Noise retention | Retrieval precision estimate | Kept messages |
+|------:|--------|----------------:|----------------:|----------------:|-----------------------------:|--------------:|
+| 1,000 | `full_archive` | 1.0000 | 1.0000 | 1.0000 | 0.0290 | 1,000 |
+| 1,000 | `sliding_window` | 0.3103 | 0.0000 | 0.1192 | 0.0750 | 120 |
+| 1,000 | `importance` | 0.7931 | 0.5250 | 0.0816 | 0.1917 | 120 |
+| 5,000 | `full_archive` | 1.0000 | 1.0000 | 1.0000 | 0.0206 | 5,000 |
+| 5,000 | `sliding_window` | 0.1650 | 0.0167 | 0.0599 | 0.0567 | 300 |
+| 5,000 | `importance` | 0.8252 | 0.3458 | 0.0283 | 0.2833 | 300 |
+| 10,000 | `full_archive` | 1.0000 | 1.0000 | 1.0000 | 0.0194 | 10,000 |
+| 10,000 | `sliding_window` | 0.1082 | 0.0386 | 0.0601 | 0.0350 | 600 |
+| 10,000 | `importance` | 0.9072 | 0.3659 | 0.0262 | 0.2933 | 600 |
+
+Interpretation:
+- Full archive preserves every critical fact, but it also retains all stale and noisy evidence, so retrieval precision collapses.
+- Sliding window removes stale/noisy evidence, but it forgets most long-range critical facts at 5k-10k turns.
+- Importance scoring keeps the same budget as sliding window while preserving far more critical facts and sharply reducing noise retention.
+
+Exported artifacts:
+- `results/memory_scaling.json`
+- `results/memory_scaling.csv`
+- `results/memory_scaling_recall.png`
+- `results/memory_scaling_retention.png`
+
 ### Retrieval-quality results (offline deterministic)
 Generated with:
 
 ```bash
-python eval_retrieval_quality.py --json --export
+python eval_retrieval_quality.py --embedding-models mock/hash,local/bge-small-en-v1.5,local/e5-base-v2,openai/text-embedding-3-small --json --export
 ```
 
 Run configuration:
-- Embedding models: `mock/hash`, `local/bge-small-en-v1.5`, `local/e5-base-v2`
+- Embedding models: `mock/hash`, `local/bge-small-en-v1.5`, `local/e5-base-v2`, `openai/text-embedding-3-small`
 - Retrieval modes: `bm25`, `embedding`, `hybrid`
 - Cases: 10 retrieval stress cases, including paraphrase retrieval, stale evidence, near-entity confusion, and distractor-heavy queries
 - Metric focus: retrieval quality before context assembly
@@ -221,13 +293,16 @@ Run configuration:
 | `bm25` | `local/e5-base-v2` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
 | `embedding` | `local/e5-base-v2` | 1.0000 | 0.1852 | 0.8889 | 0.1333 | 0.0500 | 0.7778 |
 | `hybrid` | `local/e5-base-v2` | 1.0000 | 0.1852 | 0.8889 | 0.1333 | 0.0500 | 0.7778 |
+| `bm25` | `openai/text-embedding-3-small` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
+| `embedding` | `openai/text-embedding-3-small` | 1.0000 | 0.1852 | 1.0000 | 0.1333 | 0.0500 | 1.0000 |
+| `hybrid` | `openai/text-embedding-3-small` | 1.0000 | 0.1852 | 0.8889 | 0.1333 | 0.0500 | 0.7778 |
 
 Interpretation:
 - The deterministic hash embedding is explicitly a reproducible CI baseline, not the serious semantic model.
-- BGE embedding-only is strongest on this suite: it recovers all relevant items and makes the relevant item the top hit in every relevant case.
+- BGE and OpenAI embedding-only are strongest on this suite: both recover all relevant items and make the relevant item the top hit in every relevant case.
 - E5 improves Recall@6 over BM25/hash, but its top-hit accuracy is still limited by distractor and stale-evidence pressure.
 - The current hybrid weight does not beat BGE embedding-only, which is useful evidence that hybrid retrieval needs tuning rather than blind adoption.
-- OpenAI embeddings can be compared with the same harness when `OPENAI_API_KEY` is set:
+- OpenAI embeddings can be rerun with:
 
 ```bash
 python eval_retrieval_quality.py --embedding-models openai/text-embedding-3-small --json --export
@@ -242,17 +317,19 @@ Exported artifacts:
 ---
 
 ## Evaluation
-This repo includes three evaluation paths:
+This repo includes four evaluation paths:
 
 ```bash
-python eval_retrieval_quality.py --json --export
+python eval_retrieval_quality.py --embedding-models mock/hash,local/bge-small-en-v1.5,local/e5-base-v2,openai/text-embedding-3-small --json --export
 python eval_memory_quality.py --json --export
+python eval_memory_scaling.py --turns 1000,5000,10000 --json --export
 python eval_model_answers.py --model openai/gpt-4o-mini --json --export
 python eval_model_answers.py --model google/gemini-3.1-flash-lite --strategies full_history,sliding_window,summary,adaptive --json --export
 ```
 
 `eval_retrieval_quality.py` measures retrieval quality before prompt assembly: Recall@K, Precision@K, MRR, distractor hit rate, stale evidence rate, and top-hit accuracy.
 `eval_memory_quality.py` is the article-oriented harness: it evaluates the context that each policy assembles before the LLM call.
+`eval_memory_scaling.py` stress-tests memory selection under 1k-10k-turn synthetic sessions with evolving preferences, stale updates, entity drift, and retrieval noise.
 `eval_model_answers.py` is the optional live-model harness: it calls a real provider model and scores the generated answers for recall, conflict, abstention, token usage, cost, and latency.
 
 Current memory-quality tasks:
@@ -389,6 +466,7 @@ POST   /api/chat                       non-streaming chat
 POST   /api/chat/stream                streaming chat
 GET    /api/messages/{session}         recent stored messages
 GET    /api/context/{session}          context preview sent to the LLM
+GET    /api/memory/{session}           hierarchical memory metadata
 GET    /api/stats/{session}            token and cost accounting
 GET    /api/summary/{session}          cached/generated summary
 GET    /api/sessions                   saved sessions
@@ -406,7 +484,8 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 - **Sliding window** is the cheapest because it caps context length (but it would forget older facts by design).
 - **Incremental summary** lands in between: it reduces long-history growth while paying **background summarization overhead** (tracked as `bg_input`/`bg_output`), which is why it is more expensive than a pure sliding window in this run.
 - **Adaptive context** is the strongest offline policy on the hardened memory-quality suite: `0.8688` mean quality with `78.71%` fewer context tokens than full history.
-- **Retrieval quality is now separately measurable**: BGE embedding-only reaches `1.0000` Recall@6 and `1.0000` top-hit accuracy, while the deterministic baseline exposes nonzero distractor and stale-evidence rates.
+- **Retrieval quality is now separately measurable**: BGE and OpenAI embedding-only both reach `1.0000` Recall@6 and `1.0000` top-hit accuracy, while the deterministic baseline exposes nonzero distractor and stale-evidence rates.
+- **Importance scoring changes the scaling story**: at 10k synthetic turns, the importance policy keeps the same 600-message budget as sliding window but improves critical recall from `0.1082` to `0.9072`.
 - **Failure analysis matters**: adaptive still fails on noisy retrieval/entity-confusion cases and can carry stale summary evidence on recent overrides. That is the main research signal: cost reduction is easy, reliable memory selection is the hard part.
 
 
@@ -414,20 +493,22 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 
 ```text
 .
-├── main.py                 FastAPI app and endpoints
-├── context.py              context building + incremental summary + retrieval integration
-├── semantic_memory.py       vector indexing + retrieval (demo/local embedding mode)
-├── llm_utils.py             OpenRouter + mock provider, timeout/retry handling
-├── database.py              SQLite persistence + usage ledger + memory vectors
-├── benchmark.py             synthetic benchmark + JSON/CSV/PNG export
-├── eval_retrieval_quality.py retrieval ranking quality evaluation
-├── eval_memory_quality.py   offline context-policy quality evaluation
-├── eval_model_answers.py    live model-answer quality evaluation
-├── index.html               dashboard UI (context preview + charts)
-├── tests/                   deterministic unit tests
-├── Dockerfile
-├── docker-compose.yml
-├── .github/workflows/test.yml
-├── requirements.txt
-└── requirements-embeddings.txt
+|-- main.py                  FastAPI app and endpoints
+|-- context.py               context building + incremental summary + retrieval integration
+|-- memory_importance.py     importance scoring + memory hierarchy assignment
+|-- semantic_memory.py       vector indexing + retrieval (demo/local embedding mode)
+|-- llm_utils.py             OpenRouter + mock provider, timeout/retry handling
+|-- database.py              SQLite persistence + usage ledger + memory vectors
+|-- benchmark.py             synthetic benchmark + JSON/CSV/PNG export
+|-- eval_retrieval_quality.py retrieval ranking quality evaluation
+|-- eval_memory_quality.py   offline context-policy quality evaluation
+|-- eval_memory_scaling.py   large-scale synthetic memory evaluation
+|-- eval_model_answers.py    live model-answer quality evaluation
+|-- index.html               dashboard UI (context preview + charts)
+|-- tests/                   deterministic unit tests
+|-- Dockerfile
+|-- docker-compose.yml
+|-- .github/workflows/test.yml
+|-- requirements.txt
+`-- requirements-embeddings.txt
 ```

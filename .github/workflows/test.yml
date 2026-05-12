@@ -32,6 +32,10 @@ jobs:
         run: |
           python eval_memory_quality.py --json --export
 
+      - name: Run memory-scaling eval (json)
+        run: |
+          python eval_memory_scaling.py --turns 1000 --json --export
+
       - name: Run retrieval-quality eval (json)
         run: |
           python eval_retrieval_quality.py --json --export

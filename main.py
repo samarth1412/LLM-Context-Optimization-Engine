@@ -18,6 +18,7 @@ from database import (
     estimate_tokens,
     get_all_sessions,
     get_cached_summary,
+    get_memory_hierarchy,
     get_messages,
     get_session_stats,
     get_usage_timeseries,
@@ -248,6 +249,11 @@ def get_context_endpoint(
 def get_messages_endpoint(session_id: str, limit: int = 100):
     safe_limit = max(1, min(limit, 500))
     return {"session_id": session_id, "messages": get_messages(session_id, safe_limit)}
+
+
+@app.get("/api/memory/{session_id}")
+def get_memory_endpoint(session_id: str, limit: int = 100):
+    return get_memory_hierarchy(session_id, limit=limit)
 
 
 @app.get("/api/stats/{session_id}")

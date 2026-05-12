@@ -1,0 +1,10 @@
+turns,policy,selection_budget,kept_messages,kept_tokens,critical_facts,stale_facts,noise_messages,critical_recall,stale_retention_rate,noise_retention_rate,retrieval_precision_estimate,mean_kept_importance,layer_counts,action_counts
+1000,full_archive,120,1000,10394,29,40,931,1.0,1.0,1.0,0.029,0.0352,"{'archived': 840, 'episodic': 32, 'semantic': 64, 'working': 64}","{'evict': 906, 'compress': 83, 'preserve': 11}"
+1000,sliding_window,120,120,1208,29,40,931,0.3103,0.0,0.1192,0.075,0.051,"{'archived': 50, 'semantic': 4, 'episodic': 2, 'working': 64}","{'evict': 107, 'preserve': 7, 'compress': 6}"
+1000,importance,120,120,1420,29,40,931,0.7931,0.525,0.0816,0.1917,0.203,"{'episodic': 21, 'semantic': 39, 'working': 60}","{'compress': 56, 'preserve': 11, 'evict': 53}"
+5000,full_archive,300,5000,52271,103,240,4657,1.0,1.0,1.0,0.0206,0.029,"{'archived': 4438, 'episodic': 159, 'semantic': 339, 'working': 64}","{'evict': 4632, 'compress': 357, 'preserve': 11}"
+5000,sliding_window,300,300,3052,103,240,4657,0.165,0.0167,0.0599,0.0567,0.0441,"{'archived': 212, 'semantic': 17, 'episodic': 7, 'working': 64}","{'evict': 271, 'compress': 18, 'preserve': 11}"
+5000,importance,300,300,3900,103,240,4657,0.8252,0.3458,0.0283,0.2833,0.2881,"{'semantic': 164, 'episodic': 76, 'working': 60}","{'compress': 235, 'preserve': 11, 'evict': 54}"
+10000,full_archive,600,10000,104633,194,492,9314,1.0,1.0,1.0,0.0194,0.0281,"{'archived': 8935, 'episodic': 319, 'semantic': 682, 'working': 64}","{'evict': 9284, 'compress': 705, 'preserve': 11}"
+10000,sliding_window,600,600,6189,194,492,9314,0.1082,0.0386,0.0601,0.035,0.0359,"{'archived': 484, 'episodic': 16, 'semantic': 36, 'working': 64}","{'evict': 543, 'compress': 46, 'preserve': 11}"
+10000,importance,600,600,8033,194,492,9314,0.9072,0.3659,0.0262,0.2933,0.3014,"{'semantic': 352, 'episodic': 188, 'working': 60}","{'compress': 535, 'preserve': 11, 'evict': 54}"

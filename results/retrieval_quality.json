@@ -3,7 +3,8 @@
   "embedding_models": [
     "mock/hash",
     "local/bge-small-en-v1.5",
-    "local/e5-base-v2"
+    "local/e5-base-v2",
+    "openai/text-embedding-3-small"
   ],
   "modes": [
     "bm25",
@@ -2723,6 +2724,870 @@
         2543
       ],
       "top_hit_is_relevant": false
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        5,
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "relevant_message_ids": [
+        5
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        5,
+        15,
+        16,
+        12,
+        6,
+        17
+      ],
+      "relevant_message_ids": [
+        5
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        5,
+        15,
+        16,
+        12,
+        6,
+        17
+      ],
+      "relevant_message_ids": [
+        5
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        139,
+        87,
+        81,
+        82,
+        83,
+        84
+      ],
+      "relevant_message_ids": [
+        139
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        87
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        139,
+        87,
+        92,
+        134,
+        113,
+        94
+      ],
+      "relevant_message_ids": [
+        139
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        87
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        139,
+        87,
+        92,
+        134,
+        113,
+        94
+      ],
+      "relevant_message_ids": [
+        139
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        87
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        211,
+        169,
+        161,
+        162,
+        163,
+        164
+      ],
+      "relevant_message_ids": [
+        169,
+        211
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        211,
+        169,
+        165,
+        170,
+        217,
+        215
+      ],
+      "relevant_message_ids": [
+        169,
+        211
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        211,
+        169,
+        165,
+        170,
+        217,
+        215
+      ],
+      "relevant_message_ids": [
+        169,
+        211
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        241,
+        242,
+        243,
+        244,
+        245,
+        246
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        310,
+        300,
+        308,
+        315,
+        270,
+        307
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        310,
+        300,
+        308,
+        315,
+        270,
+        307
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        327,
+        339,
+        381,
+        359,
+        321,
+        322
+      ],
+      "relevant_message_ids": [
+        327
+      ],
+      "distractor_message_ids": [
+        339,
+        359,
+        381
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        327,
+        359,
+        339,
+        381,
+        409,
+        406
+      ],
+      "relevant_message_ids": [
+        327
+      ],
+      "distractor_message_ids": [
+        339,
+        359,
+        381
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        327,
+        339,
+        359,
+        381,
+        409,
+        406
+      ],
+      "relevant_message_ids": [
+        327
+      ],
+      "distractor_message_ids": [
+        339,
+        359,
+        381
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        427,
+        445,
+        469,
+        417,
+        418,
+        419
+      ],
+      "relevant_message_ids": [
+        427
+      ],
+      "distractor_message_ids": [
+        445,
+        469
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        427,
+        445,
+        469,
+        418,
+        417,
+        421
+      ],
+      "relevant_message_ids": [
+        427
+      ],
+      "distractor_message_ids": [
+        445,
+        469
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        427,
+        445,
+        469,
+        418,
+        417,
+        421
+      ],
+      "relevant_message_ids": [
+        427
+      ],
+      "distractor_message_ids": [
+        445,
+        469
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        601,
+        521,
+        513,
+        514,
+        515,
+        516
+      ],
+      "relevant_message_ids": [
+        601
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        521
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        601,
+        521,
+        518,
+        516,
+        528,
+        529
+      ],
+      "relevant_message_ids": [
+        601
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        521
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        601,
+        521,
+        518,
+        516,
+        528,
+        529
+      ],
+      "relevant_message_ids": [
+        601
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        521
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        621,
+        643,
+        609,
+        610,
+        611,
+        612
+      ],
+      "relevant_message_ids": [
+        621
+      ],
+      "distractor_message_ids": [
+        643
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        621,
+        643,
+        627,
+        664,
+        631,
+        667
+      ],
+      "relevant_message_ids": [
+        621
+      ],
+      "distractor_message_ids": [
+        643
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        621,
+        643,
+        627,
+        664,
+        631,
+        667
+      ],
+      "relevant_message_ids": [
+        621
+      ],
+      "distractor_message_ids": [
+        643
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 0.0,
+      "precision_at_k": 0.0,
+      "mrr": 0.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        733,
+        705,
+        706,
+        707,
+        708,
+        709
+      ],
+      "relevant_message_ids": [
+        715
+      ],
+      "distractor_message_ids": [
+        733
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        715,
+        733,
+        714,
+        711,
+        716,
+        712
+      ],
+      "relevant_message_ids": [
+        715
+      ],
+      "distractor_message_ids": [
+        733
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        733,
+        715,
+        714,
+        711,
+        716,
+        712
+      ],
+      "relevant_message_ids": [
+        715
+      ],
+      "distractor_message_ids": [
+        733
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "bm25",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        833,
+        797,
+        815,
+        785,
+        786,
+        787
+      ],
+      "relevant_message_ids": [
+        797
+      ],
+      "distractor_message_ids": [
+        833
+      ],
+      "stale_message_ids": [
+        815
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "embedding",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        797,
+        815,
+        833,
+        786,
+        794,
+        787
+      ],
+      "relevant_message_ids": [
+        797
+      ],
+      "distractor_message_ids": [
+        833
+      ],
+      "stale_message_ids": [
+        815
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "hybrid",
+      "embedding_model": "openai/text-embedding-3-small",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        833,
+        797,
+        815,
+        786,
+        794,
+        787
+      ],
+      "relevant_message_ids": [
+        797
+      ],
+      "distractor_message_ids": [
+        833
+      ],
+      "stale_message_ids": [
+        815
+      ],
+      "top_hit_is_relevant": false
     }
   ],
   "aggregate": [
@@ -2816,6 +3681,39 @@
     },
     {
       "embedding_model": "local/e5-base-v2",
+      "mode": "hybrid",
+      "cases": 10,
+      "mean_recall_at_k": 1.0,
+      "mean_precision_at_k": 0.1852,
+      "mean_mrr": 0.8889,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "openai/text-embedding-3-small",
+      "mode": "bm25",
+      "cases": 10,
+      "mean_recall_at_k": 0.8889,
+      "mean_precision_at_k": 0.1667,
+      "mean_mrr": 0.8333,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "openai/text-embedding-3-small",
+      "mode": "embedding",
+      "cases": 10,
+      "mean_recall_at_k": 1.0,
+      "mean_precision_at_k": 0.1852,
+      "mean_mrr": 1.0,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 1.0
+    },
+    {
+      "embedding_model": "openai/text-embedding-3-small",
       "mode": "hybrid",
       "cases": 10,
       "mean_recall_at_k": 1.0,

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import context
 import database
+from memory_importance import score_memory
 from semantic_memory import index_message, retrieve
 
 
@@ -124,6 +125,8 @@ class ContextEngineTests(unittest.TestCase):
         self.assertIn("jasmine", results[0]["content"])
         self.assertGreater(results[0]["lexical_score"], 0)
         self.assertEqual(results[0]["embedding_model"], "mock/hash")
+        hierarchy = database.get_memory_hierarchy("s1")
+        self.assertGreaterEqual(hierarchy["top_memories"][0]["retrieval_count"], 1)
 
     def test_retrieval_modes_are_explicit(self):
         fact_id = database.store_message_with_usage(
@@ -179,6 +182,32 @@ class ContextEngineTests(unittest.TestCase):
         self.assertIsNone(database.get_story_context("s1"))
         self.assertEqual(database.get_cached_summary("s1", 1), None)
         self.assertEqual(database.get_session_stats("s1")["total_tokens"], 0)
+
+    def test_memory_importance_scores_preferences_above_routine_chatter(self):
+        preference = score_memory(
+            "Durable user preference: the user's favorite tea is jasmine.",
+            role="user",
+            message_id=10,
+            latest_message_id=12,
+            retrieval_count=2,
+        )
+        routine = score_memory(
+            "Routine turn: neutral implementation chatter about formatting.",
+            role="assistant",
+            message_id=1,
+            latest_message_id=1000,
+        )
+        stale = score_memory(
+            "Old stale memory: the previous editor used to be Vim.",
+            role="user",
+            message_id=1,
+            latest_message_id=1000,
+        )
+
+        self.assertGreater(preference["importance_score"], routine["importance_score"])
+        self.assertEqual(preference["memory_action"], "preserve")
+        self.assertEqual(routine["memory_action"], "evict")
+        self.assertNotEqual(stale["memory_action"], "preserve")
 
 
 if __name__ == "__main__":

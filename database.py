@@ -1,4 +1,5 @@
 import math
+import json
 import sqlite3
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -109,6 +110,28 @@ def init_database():
     )
     cursor.execute(
         "CREATE INDEX IF NOT EXISTS idx_memory_embedding ON memory_vectors(session_id, embedding_model)"
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS memory_metadata (
+            session_id TEXT NOT NULL,
+            message_id INTEGER NOT NULL,
+            importance_score REAL NOT NULL,
+            memory_layer TEXT NOT NULL,
+            memory_action TEXT NOT NULL,
+            retrieval_count INTEGER DEFAULT 0,
+            last_retrieved_at DATETIME,
+            signals_json TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (session_id, message_id),
+            FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE
+        )
+        """
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_memory_metadata_session ON memory_metadata(session_id, memory_layer, memory_action)"
     )
 
     conn.commit()
@@ -499,6 +522,7 @@ def get_session_stats(session_id: str) -> Dict:
 def delete_session(session_id: str) -> int:
     conn = _connect()
     cursor = conn.cursor()
+    cursor.execute("DELETE FROM memory_metadata WHERE session_id = ?", (session_id,))
     cursor.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
     messages_deleted = cursor.rowcount
     cursor.execute("DELETE FROM summaries WHERE session_id = ?", (session_id,))
@@ -508,6 +532,264 @@ def delete_session(session_id: str) -> int:
     conn.commit()
     conn.close()
     return messages_deleted
+
+
+def upsert_memory_metadata(
+    session_id: str,
+    message_id: int,
+    importance_score: float,
+    memory_layer: str,
+    memory_action: str,
+    signals: Dict,
+) -> None:
+    conn = _connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO memory_metadata (
+            session_id, message_id, importance_score, memory_layer, memory_action, signals_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(session_id, message_id) DO UPDATE SET
+            importance_score = excluded.importance_score,
+            memory_layer = excluded.memory_layer,
+            memory_action = excluded.memory_action,
+            signals_json = excluded.signals_json,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (
+            session_id,
+            int(message_id),
+            float(importance_score),
+            memory_layer,
+            memory_action,
+            json.dumps(signals, sort_keys=True),
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def increment_memory_retrievals(session_id: str, message_ids: List[int]) -> None:
+    if not message_ids:
+        return
+    from memory_importance import score_memory
+
+    conn = _connect()
+    cursor = conn.cursor()
+    cursor.executemany(
+        """
+        UPDATE memory_metadata
+        SET retrieval_count = retrieval_count + 1,
+            last_retrieved_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = ? AND message_id = ?
+        """,
+        [(session_id, int(message_id)) for message_id in message_ids],
+    )
+    cursor.execute(
+        "SELECT MAX(id) FROM messages WHERE session_id = ?",
+        (session_id,),
+    )
+    latest_message_id = cursor.fetchone()[0] or 0
+    placeholders = ",".join("?" for _ in message_ids)
+    cursor.execute(
+        f"""
+        SELECT msg.id, msg.role, msg.content, COALESCE(m.retrieval_count, 0)
+        FROM messages msg
+        LEFT JOIN memory_metadata m
+          ON m.session_id = msg.session_id AND m.message_id = msg.id
+        WHERE msg.session_id = ? AND msg.id IN ({placeholders})
+        """,
+        (session_id, *[int(message_id) for message_id in message_ids]),
+    )
+    for message_id, role, content, retrieval_count in cursor.fetchall():
+        importance = score_memory(
+            str(content),
+            role=str(role),
+            message_id=int(message_id),
+            latest_message_id=int(latest_message_id),
+            retrieval_count=int(retrieval_count or 0),
+        )
+        cursor.execute(
+            """
+            UPDATE memory_metadata
+            SET importance_score = ?,
+                memory_layer = ?,
+                memory_action = ?,
+                signals_json = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE session_id = ? AND message_id = ?
+            """,
+            (
+                float(importance["importance_score"]),
+                importance["memory_layer"],
+                importance["memory_action"],
+                json.dumps(importance["signals"], sort_keys=True),
+                session_id,
+                int(message_id),
+            ),
+        )
+    conn.commit()
+    conn.close()
+
+
+def get_memory_metadata_map(session_id: str, message_ids: List[int]) -> Dict[int, Dict]:
+    if not message_ids:
+        return {}
+    placeholders = ",".join("?" for _ in message_ids)
+    conn = _connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        f"""
+        SELECT message_id, importance_score, memory_layer, memory_action,
+               retrieval_count, signals_json
+        FROM memory_metadata
+        WHERE session_id = ? AND message_id IN ({placeholders})
+        """,
+        (session_id, *[int(message_id) for message_id in message_ids]),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    out = {}
+    for message_id, score, layer, action, retrieval_count, signals_json in rows:
+        try:
+            signals = json.loads(signals_json or "{}")
+        except Exception:
+            signals = {}
+        out[int(message_id)] = {
+            "importance_score": round(float(score or 0), 4),
+            "memory_layer": layer,
+            "memory_action": action,
+            "retrieval_count": int(retrieval_count or 0),
+            "signals": signals,
+        }
+    return out
+
+
+def refresh_memory_metadata(session_id: str) -> None:
+    from memory_importance import score_memory
+
+    conn = _connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT MAX(id) FROM messages WHERE session_id = ?",
+        (session_id,),
+    )
+    latest_message_id = cursor.fetchone()[0] or 0
+    cursor.execute(
+        """
+        SELECT DISTINCT msg.id, msg.role, msg.content, COALESCE(m.retrieval_count, 0)
+        FROM memory_vectors v
+        JOIN messages msg
+          ON msg.session_id = v.session_id AND msg.id = v.message_id
+        LEFT JOIN memory_metadata m
+          ON m.session_id = msg.session_id AND m.message_id = msg.id
+        WHERE v.session_id = ?
+        """,
+        (session_id,),
+    )
+    for message_id, role, content, retrieval_count in cursor.fetchall():
+        importance = score_memory(
+            str(content),
+            role=str(role),
+            message_id=int(message_id),
+            latest_message_id=int(latest_message_id),
+            retrieval_count=int(retrieval_count or 0),
+        )
+        cursor.execute(
+            """
+            INSERT INTO memory_metadata (
+                session_id, message_id, importance_score, memory_layer,
+                memory_action, retrieval_count, signals_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id, message_id) DO UPDATE SET
+                importance_score = excluded.importance_score,
+                memory_layer = excluded.memory_layer,
+                memory_action = excluded.memory_action,
+                signals_json = excluded.signals_json,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                session_id,
+                int(message_id),
+                float(importance["importance_score"]),
+                importance["memory_layer"],
+                importance["memory_action"],
+                int(retrieval_count or 0),
+                json.dumps(importance["signals"], sort_keys=True),
+            ),
+        )
+    conn.commit()
+    conn.close()
+
+
+def get_memory_hierarchy(session_id: str, limit: int = 100) -> Dict:
+    refresh_memory_metadata(session_id)
+    conn = _connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT memory_layer, memory_action, COUNT(*), AVG(importance_score)
+        FROM memory_metadata
+        WHERE session_id = ?
+        GROUP BY memory_layer, memory_action
+        """,
+        (session_id,),
+    )
+    groups = cursor.fetchall()
+    cursor.execute(
+        """
+        SELECT m.message_id, msg.role, msg.content, m.importance_score, m.memory_layer,
+               m.memory_action, m.retrieval_count, m.signals_json
+        FROM memory_metadata m
+        JOIN messages msg ON msg.session_id = m.session_id AND msg.id = m.message_id
+        WHERE m.session_id = ?
+        ORDER BY m.importance_score DESC, m.retrieval_count DESC
+        LIMIT ?
+        """,
+        (session_id, max(1, min(int(limit), 500))),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    layers: Dict[str, Dict] = {}
+    for layer, action, count, avg_score in groups:
+        layer_bucket = layers.setdefault(
+            layer,
+            {"count": 0, "mean_importance": 0.0, "actions": {}},
+        )
+        layer_bucket["count"] += int(count or 0)
+        layer_bucket["actions"][action] = int(count or 0)
+    for layer, bucket in layers.items():
+        layer_rows = [row for row in groups if row[0] == layer]
+        total = sum(int(row[2] or 0) for row in layer_rows)
+        if total:
+            bucket["mean_importance"] = round(
+                sum(float(row[3] or 0) * int(row[2] or 0) for row in layer_rows) / total,
+                4,
+            )
+
+    memories = []
+    for message_id, role, content, score, layer, action, retrieval_count, signals_json in rows:
+        try:
+            signals = json.loads(signals_json or "{}")
+        except Exception:
+            signals = {}
+        memories.append(
+            {
+                "message_id": int(message_id),
+                "role": role,
+                "preview": str(content)[:240],
+                "importance_score": round(float(score or 0), 4),
+                "memory_layer": layer,
+                "memory_action": action,
+                "retrieval_count": int(retrieval_count or 0),
+                "signals": signals,
+            }
+        )
+    return {"session_id": session_id, "layers": layers, "top_memories": memories}
 
 
 def get_usage_timeseries(session_id: str, operation: Optional[str] = None) -> List[Dict]:

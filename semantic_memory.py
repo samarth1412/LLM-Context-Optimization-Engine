@@ -13,7 +13,13 @@ from config import (
     RETRIEVAL_MODE,
     get_openai_key,
 )
-from database import _connect  # local module private helper is fine within repo
+from database import (
+    _connect,  # local module private helper is fine within repo
+    get_memory_metadata_map,
+    increment_memory_retrievals,
+    upsert_memory_metadata,
+)
+from memory_importance import score_memory
 
 
 TOKEN_RE = re.compile(r"[a-z0-9_]+")
@@ -31,6 +37,7 @@ EMBEDDING_MODEL_ALIASES = {
     "text-embedding-3-small": "openai/text-embedding-3-small",
 }
 _LOCAL_MODEL_CACHE = {}
+_EMBEDDING_CACHE = {}
 
 
 def _tokenize(text: str) -> List[str]:
@@ -129,14 +136,22 @@ def _openai_embedding(text: str, model: str) -> List[float]:
 
 def embed_text(text: str, model: Optional[str] = None, purpose: str = "document") -> List[float]:
     selected_model = normalize_embedding_model(model)
+    cache_key = (selected_model, purpose, text)
+    if cache_key in _EMBEDDING_CACHE:
+        return list(_EMBEDDING_CACHE[cache_key])
+
     if selected_model.startswith("mock/"):
-        return _hash_embedding(text)
-    if selected_model.startswith("local/"):
-        return _local_embedding(text, selected_model, purpose)
-    if selected_model.startswith("openai/"):
+        vec = _hash_embedding(text)
+    elif selected_model.startswith("local/"):
+        vec = _local_embedding(text, selected_model, purpose)
+    elif selected_model.startswith("openai/"):
         formatted = _format_for_embedding_model(text, selected_model, purpose)
-        return _openai_embedding(formatted, selected_model)
-    raise ValueError(f"Unsupported embedding model: {selected_model}")
+        vec = _openai_embedding(formatted, selected_model)
+    else:
+        raise ValueError(f"Unsupported embedding model: {selected_model}")
+
+    _EMBEDDING_CACHE[cache_key] = list(vec)
+    return vec
 
 
 def index_message(
@@ -149,6 +164,12 @@ def index_message(
 ) -> None:
     selected_model = normalize_embedding_model(embedding_model)
     vec = embed_text(content, selected_model, purpose="document")
+    importance = score_memory(
+        content,
+        role=role,
+        message_id=message_id,
+        latest_message_id=message_id,
+    )
     conn = _connect()
     cursor = conn.cursor()
     cursor.execute(
@@ -162,6 +183,14 @@ def index_message(
     )
     conn.commit()
     conn.close()
+    upsert_memory_metadata(
+        session_id,
+        message_id,
+        importance["importance_score"],
+        importance["memory_layer"],
+        importance["memory_action"],
+        importance["signals"],
+    )
 
 
 def _cosine(a: List[float], b: List[float]) -> float:
@@ -287,7 +316,10 @@ def retrieve(
 
     scored.sort(reverse=True, key=lambda x: x[0])
     out = []
+    selected_message_ids = [message_id for _, _, _, message_id, _, _ in scored[:top_k]]
+    metadata = get_memory_metadata_map(session_id, selected_message_ids)
     for score, vector_score, lexical_score, message_id, role, content in scored[:top_k]:
+        memory_metadata = metadata.get(message_id, {})
         out.append(
             {
                 "message_id": message_id,
@@ -298,6 +330,10 @@ def retrieve(
                 "lexical_score": round(lexical_score, 4),
                 "retrieval_mode": selected_mode,
                 "embedding_model": selected_model,
+                "importance_score": memory_metadata.get("importance_score"),
+                "memory_layer": memory_metadata.get("memory_layer"),
+                "memory_action": memory_metadata.get("memory_action"),
             }
         )
+    increment_memory_retrievals(session_id, selected_message_ids)
     return out
