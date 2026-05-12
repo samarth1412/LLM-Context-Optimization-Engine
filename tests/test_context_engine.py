@@ -123,6 +123,28 @@ class ContextEngineTests(unittest.TestCase):
         self.assertGreaterEqual(len(results), 1)
         self.assertIn("jasmine", results[0]["content"])
         self.assertGreater(results[0]["lexical_score"], 0)
+        self.assertEqual(results[0]["embedding_model"], "mock/hash")
+
+    def test_retrieval_modes_are_explicit(self):
+        fact_id = database.store_message_with_usage(
+            "s1",
+            "user",
+            "Project memory: Atlas launches in Europe.",
+        )
+        index_message("s1", fact_id, "user", "Project memory: Atlas launches in Europe.")
+        other_id = database.store_message_with_usage(
+            "s1",
+            "assistant",
+            "Routine implementation chatter about formatting.",
+        )
+        index_message("s1", other_id, "assistant", "Routine implementation chatter about formatting.")
+
+        bm25 = retrieve("s1", "Where does Atlas launch?", top_k=1, mode="bm25")
+        embedding = retrieve("s1", "Where does Atlas launch?", top_k=1, mode="embedding")
+
+        self.assertEqual(bm25[0]["retrieval_mode"], "bm25")
+        self.assertEqual(embedding[0]["retrieval_mode"], "embedding")
+        self.assertEqual(bm25[0]["embedding_model"], "mock/hash")
 
     def test_adaptive_context_uses_retrieval_for_memory_question(self):
         for index in range(20):

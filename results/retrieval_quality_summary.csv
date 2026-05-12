@@ -1,0 +1,10 @@
+embedding_model,mode,cases,mean_recall_at_k,mean_precision_at_k,mean_mrr,mean_distractor_hit_rate,mean_stale_evidence_rate,top_hit_accuracy
+mock/hash,bm25,10,0.8889,0.1667,0.8333,0.1333,0.05,0.7778
+mock/hash,embedding,10,0.8889,0.1667,0.8333,0.1333,0.05,0.7778
+mock/hash,hybrid,10,0.8889,0.1667,0.8333,0.1333,0.05,0.7778
+local/bge-small-en-v1.5,bm25,10,0.8889,0.1667,0.8333,0.1333,0.05,0.7778
+local/bge-small-en-v1.5,embedding,10,1.0,0.1852,1.0,0.1333,0.05,1.0
+local/bge-small-en-v1.5,hybrid,10,1.0,0.1852,0.8889,0.1333,0.05,0.7778
+local/e5-base-v2,bm25,10,0.8889,0.1667,0.8333,0.1333,0.05,0.7778
+local/e5-base-v2,embedding,10,1.0,0.1852,0.8889,0.1333,0.05,0.7778
+local/e5-base-v2,hybrid,10,1.0,0.1852,0.8889,0.1333,0.05,0.7778

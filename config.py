@@ -9,6 +9,7 @@ load_dotenv()
 # API configuration
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+OPENAI_EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings"
 GEMINI_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
@@ -96,6 +97,8 @@ MAX_INPUT_TOKENS = int(os.getenv("MAX_INPUT_TOKENS", "50000"))
 CONTEXT_POLICY = os.getenv("CONTEXT_POLICY", "adaptive")
 RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "6"))
 RETRIEVAL_MIN_SCORE = float(os.getenv("RETRIEVAL_MIN_SCORE", "0.08"))
+RETRIEVAL_MODE = os.getenv("RETRIEVAL_MODE", "hybrid")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "mock/hash")
 
 
 # Rate limiting

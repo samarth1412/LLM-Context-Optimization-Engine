@@ -1,0 +1,2829 @@
+{
+  "top_k": 6,
+  "embedding_models": [
+    "mock/hash",
+    "local/bge-small-en-v1.5",
+    "local/e5-base-v2"
+  ],
+  "modes": [
+    "bm25",
+    "embedding",
+    "hybrid"
+  ],
+  "skipped_models": [],
+  "cases": [
+    {
+      "name": "long_range_preference",
+      "category": "long_range_recall",
+      "relevant_message_indices": [
+        4
+      ],
+      "stale_message_indices": [],
+      "distractor_message_indices": [],
+      "note": "Early fact is outside the recent window."
+    },
+    {
+      "name": "temporal_update",
+      "category": "temporal_update",
+      "relevant_message_indices": [
+        58
+      ],
+      "stale_message_indices": [
+        6
+      ],
+      "distractor_message_indices": [],
+      "note": "Older stale fact is replaced before the recent window."
+    },
+    {
+      "name": "multi_hop_project_state",
+      "category": "multi_hop",
+      "relevant_message_indices": [
+        8,
+        50
+      ],
+      "stale_message_indices": [],
+      "distractor_message_indices": [],
+      "note": "Answer requires connecting codename and later brand fact."
+    },
+    {
+      "name": "abstention_no_evidence",
+      "category": "abstention",
+      "relevant_message_indices": [],
+      "stale_message_indices": [],
+      "distractor_message_indices": [],
+      "note": "Correct behavior is to avoid inventing a missing private fact."
+    },
+    {
+      "name": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "relevant_message_indices": [
+        6
+      ],
+      "stale_message_indices": [],
+      "distractor_message_indices": [
+        18,
+        38,
+        60
+      ],
+      "note": "Lexical retrieval can pull high-overlap but irrelevant badge snippets."
+    },
+    {
+      "name": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "relevant_message_indices": [
+        10
+      ],
+      "stale_message_indices": [],
+      "distractor_message_indices": [
+        28,
+        52
+      ],
+      "note": "Near-name entity collision tests whether context includes confusing neighbors."
+    },
+    {
+      "name": "recent_override",
+      "category": "recent_update",
+      "relevant_message_indices": [
+        88
+      ],
+      "stale_message_indices": [
+        8
+      ],
+      "distractor_message_indices": [],
+      "note": "Recent message overrides a stale summary fact."
+    },
+    {
+      "name": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "relevant_message_indices": [
+        12
+      ],
+      "stale_message_indices": [],
+      "distractor_message_indices": [
+        34
+      ],
+      "note": "Simulates summary drift by omitting a critical early constraint."
+    },
+    {
+      "name": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "relevant_message_indices": [
+        10
+      ],
+      "stale_message_indices": [],
+      "distractor_message_indices": [
+        28
+      ],
+      "note": "Tests whether embeddings can bridge a restaurant/dinner paraphrase that lexical retrieval overweights."
+    },
+    {
+      "name": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "relevant_message_indices": [
+        12
+      ],
+      "stale_message_indices": [
+        30
+      ],
+      "distractor_message_indices": [
+        48
+      ],
+      "note": "Tests abbreviation/entity matching and stale launch-region evidence."
+    }
+  ],
+  "results": [
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        5,
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "relevant_message_ids": [
+        5
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        5,
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "relevant_message_ids": [
+        5
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        5,
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "relevant_message_ids": [
+        5
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        139,
+        87,
+        81,
+        82,
+        83,
+        84
+      ],
+      "relevant_message_ids": [
+        139
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        87
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        139,
+        87,
+        99,
+        140,
+        81,
+        82
+      ],
+      "relevant_message_ids": [
+        139
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        87
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        139,
+        87,
+        99,
+        140,
+        81,
+        82
+      ],
+      "relevant_message_ids": [
+        139
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        87
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        211,
+        169,
+        161,
+        162,
+        163,
+        164
+      ],
+      "relevant_message_ids": [
+        169,
+        211
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        211,
+        169,
+        192,
+        161,
+        162,
+        163
+      ],
+      "relevant_message_ids": [
+        169,
+        211
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        211,
+        169,
+        192,
+        161,
+        162,
+        163
+      ],
+      "relevant_message_ids": [
+        169,
+        211
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        241,
+        242,
+        243,
+        244,
+        245,
+        246
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        241,
+        242,
+        243,
+        244,
+        245,
+        246
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        241,
+        242,
+        243,
+        244,
+        245,
+        246
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        327,
+        339,
+        381,
+        359,
+        321,
+        322
+      ],
+      "relevant_message_ids": [
+        327
+      ],
+      "distractor_message_ids": [
+        339,
+        359,
+        381
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        327,
+        339,
+        359,
+        381,
+        321,
+        358
+      ],
+      "relevant_message_ids": [
+        327
+      ],
+      "distractor_message_ids": [
+        339,
+        359,
+        381
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        327,
+        339,
+        359,
+        381,
+        321,
+        358
+      ],
+      "relevant_message_ids": [
+        327
+      ],
+      "distractor_message_ids": [
+        339,
+        359,
+        381
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        427,
+        445,
+        469,
+        417,
+        418,
+        419
+      ],
+      "relevant_message_ids": [
+        427
+      ],
+      "distractor_message_ids": [
+        445,
+        469
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        427,
+        445,
+        469,
+        425,
+        417,
+        418
+      ],
+      "relevant_message_ids": [
+        427
+      ],
+      "distractor_message_ids": [
+        445,
+        469
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        427,
+        445,
+        469,
+        425,
+        417,
+        418
+      ],
+      "relevant_message_ids": [
+        427
+      ],
+      "distractor_message_ids": [
+        445,
+        469
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        601,
+        521,
+        513,
+        514,
+        515,
+        516
+      ],
+      "relevant_message_ids": [
+        601
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        521
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        601,
+        521,
+        531,
+        513,
+        514,
+        515
+      ],
+      "relevant_message_ids": [
+        601
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        521
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        601,
+        521,
+        531,
+        513,
+        514,
+        515
+      ],
+      "relevant_message_ids": [
+        601
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        521
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        621,
+        643,
+        609,
+        610,
+        611,
+        612
+      ],
+      "relevant_message_ids": [
+        621
+      ],
+      "distractor_message_ids": [
+        643
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        621,
+        643,
+        619,
+        692,
+        699,
+        609
+      ],
+      "relevant_message_ids": [
+        621
+      ],
+      "distractor_message_ids": [
+        643
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        621,
+        643,
+        619,
+        692,
+        699,
+        609
+      ],
+      "relevant_message_ids": [
+        621
+      ],
+      "distractor_message_ids": [
+        643
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 0.0,
+      "precision_at_k": 0.0,
+      "mrr": 0.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        733,
+        705,
+        706,
+        707,
+        708,
+        709
+      ],
+      "relevant_message_ids": [
+        715
+      ],
+      "distractor_message_ids": [
+        733
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 0.0,
+      "precision_at_k": 0.0,
+      "mrr": 0.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        733,
+        705,
+        706,
+        707,
+        708,
+        709
+      ],
+      "relevant_message_ids": [
+        715
+      ],
+      "distractor_message_ids": [
+        733
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 0.0,
+      "precision_at_k": 0.0,
+      "mrr": 0.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        733,
+        705,
+        706,
+        707,
+        708,
+        709
+      ],
+      "relevant_message_ids": [
+        715
+      ],
+      "distractor_message_ids": [
+        733
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "bm25",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        833,
+        797,
+        815,
+        785,
+        786,
+        787
+      ],
+      "relevant_message_ids": [
+        797
+      ],
+      "distractor_message_ids": [
+        833
+      ],
+      "stale_message_ids": [
+        815
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "embedding",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        833,
+        797,
+        815,
+        793,
+        827,
+        785
+      ],
+      "relevant_message_ids": [
+        797
+      ],
+      "distractor_message_ids": [
+        833
+      ],
+      "stale_message_ids": [
+        815
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "hybrid",
+      "embedding_model": "mock/hash",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        833,
+        797,
+        815,
+        793,
+        827,
+        785
+      ],
+      "relevant_message_ids": [
+        797
+      ],
+      "distractor_message_ids": [
+        833
+      ],
+      "stale_message_ids": [
+        815
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        869,
+        865,
+        866,
+        867,
+        868,
+        870
+      ],
+      "relevant_message_ids": [
+        869
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        869,
+        874,
+        873,
+        872,
+        870,
+        886
+      ],
+      "relevant_message_ids": [
+        869
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        869,
+        874,
+        873,
+        872,
+        870,
+        886
+      ],
+      "relevant_message_ids": [
+        869
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1003,
+        951,
+        945,
+        946,
+        947,
+        948
+      ],
+      "relevant_message_ids": [
+        1003
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        951
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1003,
+        951,
+        1005,
+        1021,
+        1010,
+        1015
+      ],
+      "relevant_message_ids": [
+        1003
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        951
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1003,
+        951,
+        1005,
+        1021,
+        1010,
+        1015
+      ],
+      "relevant_message_ids": [
+        1003
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        951
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1075,
+        1033,
+        1025,
+        1026,
+        1027,
+        1028
+      ],
+      "relevant_message_ids": [
+        1033,
+        1075
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1075,
+        1033,
+        1030,
+        1048,
+        1086,
+        1042
+      ],
+      "relevant_message_ids": [
+        1033,
+        1075
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1075,
+        1033,
+        1030,
+        1048,
+        1086,
+        1042
+      ],
+      "relevant_message_ids": [
+        1033,
+        1075
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1105,
+        1106,
+        1107,
+        1108,
+        1109,
+        1110
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1123,
+        1126,
+        1128,
+        1169,
+        1130,
+        1171
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1123,
+        1126,
+        1128,
+        1169,
+        1130,
+        1171
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1191,
+        1203,
+        1245,
+        1223,
+        1185,
+        1186
+      ],
+      "relevant_message_ids": [
+        1191
+      ],
+      "distractor_message_ids": [
+        1203,
+        1223,
+        1245
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1191,
+        1223,
+        1203,
+        1245,
+        1190,
+        1276
+      ],
+      "relevant_message_ids": [
+        1191
+      ],
+      "distractor_message_ids": [
+        1203,
+        1223,
+        1245
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1191,
+        1203,
+        1223,
+        1245,
+        1190,
+        1276
+      ],
+      "relevant_message_ids": [
+        1191
+      ],
+      "distractor_message_ids": [
+        1203,
+        1223,
+        1245
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1291,
+        1309,
+        1333,
+        1281,
+        1282,
+        1283
+      ],
+      "relevant_message_ids": [
+        1291
+      ],
+      "distractor_message_ids": [
+        1309,
+        1333
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1291,
+        1309,
+        1333,
+        1298,
+        1288,
+        1302
+      ],
+      "relevant_message_ids": [
+        1291
+      ],
+      "distractor_message_ids": [
+        1309,
+        1333
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1291,
+        1309,
+        1333,
+        1298,
+        1288,
+        1302
+      ],
+      "relevant_message_ids": [
+        1291
+      ],
+      "distractor_message_ids": [
+        1309,
+        1333
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1465,
+        1385,
+        1377,
+        1378,
+        1379,
+        1380
+      ],
+      "relevant_message_ids": [
+        1465
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        1385
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1465,
+        1385,
+        1462,
+        1394,
+        1432,
+        1437
+      ],
+      "relevant_message_ids": [
+        1465
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        1385
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1465,
+        1385,
+        1462,
+        1394,
+        1432,
+        1437
+      ],
+      "relevant_message_ids": [
+        1465
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        1385
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1485,
+        1507,
+        1473,
+        1474,
+        1475,
+        1476
+      ],
+      "relevant_message_ids": [
+        1485
+      ],
+      "distractor_message_ids": [
+        1507
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1485,
+        1507,
+        1480,
+        1481,
+        1476,
+        1537
+      ],
+      "relevant_message_ids": [
+        1485
+      ],
+      "distractor_message_ids": [
+        1507
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1485,
+        1507,
+        1480,
+        1481,
+        1476,
+        1537
+      ],
+      "relevant_message_ids": [
+        1485
+      ],
+      "distractor_message_ids": [
+        1507
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 0.0,
+      "precision_at_k": 0.0,
+      "mrr": 0.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1597,
+        1569,
+        1570,
+        1571,
+        1572,
+        1573
+      ],
+      "relevant_message_ids": [
+        1579
+      ],
+      "distractor_message_ids": [
+        1597
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1579,
+        1597,
+        1584,
+        1586,
+        1599,
+        1585
+      ],
+      "relevant_message_ids": [
+        1579
+      ],
+      "distractor_message_ids": [
+        1597
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1597,
+        1579,
+        1584,
+        1586,
+        1599,
+        1585
+      ],
+      "relevant_message_ids": [
+        1579
+      ],
+      "distractor_message_ids": [
+        1597
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "bm25",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1697,
+        1661,
+        1679,
+        1649,
+        1650,
+        1651
+      ],
+      "relevant_message_ids": [
+        1661
+      ],
+      "distractor_message_ids": [
+        1697
+      ],
+      "stale_message_ids": [
+        1679
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "embedding",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1661,
+        1679,
+        1697,
+        1656,
+        1652,
+        1657
+      ],
+      "relevant_message_ids": [
+        1661
+      ],
+      "distractor_message_ids": [
+        1697
+      ],
+      "stale_message_ids": [
+        1679
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "hybrid",
+      "embedding_model": "local/bge-small-en-v1.5",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1697,
+        1661,
+        1679,
+        1656,
+        1652,
+        1657
+      ],
+      "relevant_message_ids": [
+        1661
+      ],
+      "distractor_message_ids": [
+        1697
+      ],
+      "stale_message_ids": [
+        1679
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1733,
+        1729,
+        1730,
+        1731,
+        1732,
+        1734
+      ],
+      "relevant_message_ids": [
+        1733
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1733,
+        1732,
+        1729,
+        1737,
+        1806,
+        1734
+      ],
+      "relevant_message_ids": [
+        1733
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "long_range_preference",
+      "category": "long_range_recall",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1733,
+        1732,
+        1729,
+        1737,
+        1806,
+        1734
+      ],
+      "relevant_message_ids": [
+        1733
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1867,
+        1815,
+        1809,
+        1810,
+        1811,
+        1812
+      ],
+      "relevant_message_ids": [
+        1867
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        1815
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1867,
+        1815,
+        1828,
+        1873,
+        1841,
+        1843
+      ],
+      "relevant_message_ids": [
+        1867
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        1815
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "temporal_update",
+      "category": "temporal_update",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        1867,
+        1815,
+        1828,
+        1873,
+        1841,
+        1843
+      ],
+      "relevant_message_ids": [
+        1867
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        1815
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1939,
+        1897,
+        1889,
+        1890,
+        1891,
+        1892
+      ],
+      "relevant_message_ids": [
+        1897,
+        1939
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1939,
+        1897,
+        1889,
+        1892,
+        1955,
+        1894
+      ],
+      "relevant_message_ids": [
+        1897,
+        1939
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "multi_hop_project_state",
+      "category": "multi_hop",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.3333,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1939,
+        1897,
+        1889,
+        1892,
+        1955,
+        1894
+      ],
+      "relevant_message_ids": [
+        1897,
+        1939
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        1969,
+        1970,
+        1971,
+        1972,
+        1973,
+        1974
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2016,
+        2014,
+        1987,
+        2017,
+        2012,
+        1969
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abstention_no_evidence",
+      "category": "abstention",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": false,
+      "recall_at_k": null,
+      "precision_at_k": null,
+      "mrr": null,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2016,
+        2014,
+        1987,
+        2017,
+        2012,
+        1969
+      ],
+      "relevant_message_ids": [],
+      "distractor_message_ids": [],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2055,
+        2067,
+        2109,
+        2087,
+        2049,
+        2050
+      ],
+      "relevant_message_ids": [
+        2055
+      ],
+      "distractor_message_ids": [
+        2067,
+        2087,
+        2109
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2087,
+        2055,
+        2067,
+        2109,
+        2115,
+        2049
+      ],
+      "relevant_message_ids": [
+        2055
+      ],
+      "distractor_message_ids": [
+        2067,
+        2087,
+        2109
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "distractor_retrieval_noise",
+      "category": "retrieval_noise",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.5,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2055,
+        2067,
+        2087,
+        2109,
+        2115,
+        2049
+      ],
+      "relevant_message_ids": [
+        2055
+      ],
+      "distractor_message_ids": [
+        2067,
+        2087,
+        2109
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2155,
+        2173,
+        2197,
+        2145,
+        2146,
+        2147
+      ],
+      "relevant_message_ids": [
+        2155
+      ],
+      "distractor_message_ids": [
+        2173,
+        2197
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2155,
+        2173,
+        2197,
+        2186,
+        2196,
+        2206
+      ],
+      "relevant_message_ids": [
+        2155
+      ],
+      "distractor_message_ids": [
+        2173,
+        2197
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "similar_entity_confusion",
+      "category": "entity_disambiguation",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.3333,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2155,
+        2173,
+        2197,
+        2186,
+        2196,
+        2206
+      ],
+      "relevant_message_ids": [
+        2155
+      ],
+      "distractor_message_ids": [
+        2173,
+        2197
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        2329,
+        2249,
+        2241,
+        2242,
+        2243,
+        2244
+      ],
+      "relevant_message_ids": [
+        2329
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        2249
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        2329,
+        2249,
+        2243,
+        2246,
+        2241,
+        2256
+      ],
+      "relevant_message_ids": [
+        2329
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        2249
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "recent_override",
+      "category": "recent_update",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.0,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        2329,
+        2249,
+        2243,
+        2246,
+        2241,
+        2256
+      ],
+      "relevant_message_ids": [
+        2329
+      ],
+      "distractor_message_ids": [],
+      "stale_message_ids": [
+        2249
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2349,
+        2371,
+        2337,
+        2338,
+        2339,
+        2340
+      ],
+      "relevant_message_ids": [
+        2349
+      ],
+      "distractor_message_ids": [
+        2371
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2349,
+        2371,
+        2411,
+        2369,
+        2380,
+        2401
+      ],
+      "relevant_message_ids": [
+        2349
+      ],
+      "distractor_message_ids": [
+        2371
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "summary_drift_missing_constraint",
+      "category": "summary_drift",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2349,
+        2371,
+        2411,
+        2369,
+        2380,
+        2401
+      ],
+      "relevant_message_ids": [
+        2349
+      ],
+      "distractor_message_ids": [
+        2371
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 0.0,
+      "precision_at_k": 0.0,
+      "mrr": 0.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2461,
+        2433,
+        2434,
+        2435,
+        2436,
+        2437
+      ],
+      "relevant_message_ids": [
+        2443
+      ],
+      "distractor_message_ids": [
+        2461
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2461,
+        2443,
+        2451,
+        2433,
+        2441,
+        2499
+      ],
+      "relevant_message_ids": [
+        2443
+      ],
+      "distractor_message_ids": [
+        2461
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "semantic_paraphrase_retrieval",
+      "category": "semantic_gap",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.0,
+      "retrieved_message_ids": [
+        2461,
+        2443,
+        2451,
+        2433,
+        2441,
+        2499
+      ],
+      "relevant_message_ids": [
+        2443
+      ],
+      "distractor_message_ids": [
+        2461
+      ],
+      "stale_message_ids": [],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "bm25",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        2561,
+        2525,
+        2543,
+        2513,
+        2514,
+        2515
+      ],
+      "relevant_message_ids": [
+        2525
+      ],
+      "distractor_message_ids": [
+        2561
+      ],
+      "stale_message_ids": [
+        2543
+      ],
+      "top_hit_is_relevant": false
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "embedding",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 1.0,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        2525,
+        2561,
+        2543,
+        2579,
+        2518,
+        2516
+      ],
+      "relevant_message_ids": [
+        2525
+      ],
+      "distractor_message_ids": [
+        2561
+      ],
+      "stale_message_ids": [
+        2543
+      ],
+      "top_hit_is_relevant": true
+    },
+    {
+      "case": "abbreviation_entity_retrieval",
+      "category": "entity_abbreviation",
+      "mode": "hybrid",
+      "embedding_model": "local/e5-base-v2",
+      "top_k": 6,
+      "has_relevant": true,
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.1667,
+      "mrr": 0.5,
+      "distractor_hit_rate": 0.1667,
+      "stale_evidence_rate": 0.1667,
+      "retrieved_message_ids": [
+        2561,
+        2525,
+        2543,
+        2579,
+        2518,
+        2516
+      ],
+      "relevant_message_ids": [
+        2525
+      ],
+      "distractor_message_ids": [
+        2561
+      ],
+      "stale_message_ids": [
+        2543
+      ],
+      "top_hit_is_relevant": false
+    }
+  ],
+  "aggregate": [
+    {
+      "embedding_model": "mock/hash",
+      "mode": "bm25",
+      "cases": 10,
+      "mean_recall_at_k": 0.8889,
+      "mean_precision_at_k": 0.1667,
+      "mean_mrr": 0.8333,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "mock/hash",
+      "mode": "embedding",
+      "cases": 10,
+      "mean_recall_at_k": 0.8889,
+      "mean_precision_at_k": 0.1667,
+      "mean_mrr": 0.8333,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "mock/hash",
+      "mode": "hybrid",
+      "cases": 10,
+      "mean_recall_at_k": 0.8889,
+      "mean_precision_at_k": 0.1667,
+      "mean_mrr": 0.8333,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "local/bge-small-en-v1.5",
+      "mode": "bm25",
+      "cases": 10,
+      "mean_recall_at_k": 0.8889,
+      "mean_precision_at_k": 0.1667,
+      "mean_mrr": 0.8333,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "local/bge-small-en-v1.5",
+      "mode": "embedding",
+      "cases": 10,
+      "mean_recall_at_k": 1.0,
+      "mean_precision_at_k": 0.1852,
+      "mean_mrr": 1.0,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 1.0
+    },
+    {
+      "embedding_model": "local/bge-small-en-v1.5",
+      "mode": "hybrid",
+      "cases": 10,
+      "mean_recall_at_k": 1.0,
+      "mean_precision_at_k": 0.1852,
+      "mean_mrr": 0.8889,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "local/e5-base-v2",
+      "mode": "bm25",
+      "cases": 10,
+      "mean_recall_at_k": 0.8889,
+      "mean_precision_at_k": 0.1667,
+      "mean_mrr": 0.8333,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "local/e5-base-v2",
+      "mode": "embedding",
+      "cases": 10,
+      "mean_recall_at_k": 1.0,
+      "mean_precision_at_k": 0.1852,
+      "mean_mrr": 0.8889,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    },
+    {
+      "embedding_model": "local/e5-base-v2",
+      "mode": "hybrid",
+      "cases": 10,
+      "mean_recall_at_k": 1.0,
+      "mean_precision_at_k": 0.1852,
+      "mean_mrr": 0.8889,
+      "mean_distractor_hit_rate": 0.1333,
+      "mean_stale_evidence_rate": 0.05,
+      "top_hit_accuracy": 0.7778
+    }
+  ]
+}

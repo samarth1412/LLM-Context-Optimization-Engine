@@ -34,17 +34,19 @@ The system also tracks **foreground vs background** token/cost usage (chat calls
 - **Token-aware context builder** (`context.py`)
 - **Incremental summarization with caching** (older turns summarized, recent turns preserved verbatim)
 - **Adaptive context policy** (`full_history`, `sliding_window`, `summary`, `retrieval`, `hybrid`, `adaptive`)
-- **Semantic memory retrieval module** (`semantic_memory.py`) with deterministic local hash vectors + BM25 hybrid top-k retrieval
+- **Semantic memory retrieval module** (`semantic_memory.py`) with BM25, embedding-only, and hybrid retrieval modes
+- **Pluggable embedding backends**: deterministic `mock/hash`, local `bge-small-en-v1.5` / `e5-base-v2`, and API `openai/text-embedding-3-small`
 - **Model-aware token counting** (tiktoken + fallback)
 - **Usage & cost ledger** for chat, background memory operations, prompt-cache tokens, and latency (`llm_usage` table)
 - **Context preview endpoint** (inspect what’s actually sent to the LLM)
 - **Session stats endpoint** (tokens + cost breakdown)
 - **Benchmark harness** with exports to **JSON/CSV/PNG** (`benchmark.py`)
+- **Retrieval-quality evaluation harness** with Recall@K, MRR, Precision@K, distractor hit rate, stale evidence rate, and heatmap export (`eval_retrieval_quality.py`)
 - **Memory-quality evaluation harness** with exports to **JSON/CSV/failure CSV/PNG** (`eval_memory_quality.py`)
 - **Live model-answer evaluation harness** with exports to **JSON/CSV** (`eval_model_answers.py`)
 - **OpenAI, Gemini, OpenRouter-compatible providers** + **deterministic mock provider** (`mock/echo`) for offline tests
 - **Docker + docker-compose** local deployment
-- **GitHub Actions CI** that runs unit tests, benchmark export, and memory-quality export
+- **GitHub Actions CI** that runs unit tests, benchmark export, retrieval-quality export, and memory-quality export
 
 ---
 
@@ -113,7 +115,7 @@ The project currently compares:
 - **`hybrid`**: cached summary + retrieved older facts + recent messages
 - **`adaptive`**: query-aware policy that selects summary, retrieval, or both based on intent
 
-The synthetic cost benchmark still reports the original three token/cost baselines. The memory-quality harness evaluates all six policies.
+The synthetic cost benchmark still reports the original three token/cost baselines. The retrieval-quality harness evaluates BM25 vs embedding vs hybrid retrieval. The memory-quality harness evaluates all six context policies.
 
 ---
 
@@ -195,17 +197,61 @@ Exported artifacts:
 - `results/memory_quality_failures.csv`
 - `results/memory_quality_pareto.png`
 
+### Retrieval-quality results (offline deterministic)
+Generated with:
+
+```bash
+python eval_retrieval_quality.py --json --export
+```
+
+Run configuration:
+- Embedding models: `mock/hash`, `local/bge-small-en-v1.5`, `local/e5-base-v2`
+- Retrieval modes: `bm25`, `embedding`, `hybrid`
+- Cases: 10 retrieval stress cases, including paraphrase retrieval, stale evidence, near-entity confusion, and distractor-heavy queries
+- Metric focus: retrieval quality before context assembly
+
+| Retrieval mode | Embedding model | Recall@6 | Precision@6 | MRR | Distractor hit rate | Stale evidence rate | Top-hit accuracy |
+|---------------|----------------|---------:|------------:|----:|--------------------:|--------------------:|-----------------:|
+| `bm25` | `mock/hash` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
+| `embedding` | `mock/hash` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
+| `hybrid` | `mock/hash` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
+| `bm25` | `local/bge-small-en-v1.5` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
+| `embedding` | `local/bge-small-en-v1.5` | 1.0000 | 0.1852 | 1.0000 | 0.1333 | 0.0500 | 1.0000 |
+| `hybrid` | `local/bge-small-en-v1.5` | 1.0000 | 0.1852 | 0.8889 | 0.1333 | 0.0500 | 0.7778 |
+| `bm25` | `local/e5-base-v2` | 0.8889 | 0.1667 | 0.8333 | 0.1333 | 0.0500 | 0.7778 |
+| `embedding` | `local/e5-base-v2` | 1.0000 | 0.1852 | 0.8889 | 0.1333 | 0.0500 | 0.7778 |
+| `hybrid` | `local/e5-base-v2` | 1.0000 | 0.1852 | 0.8889 | 0.1333 | 0.0500 | 0.7778 |
+
+Interpretation:
+- The deterministic hash embedding is explicitly a reproducible CI baseline, not the serious semantic model.
+- BGE embedding-only is strongest on this suite: it recovers all relevant items and makes the relevant item the top hit in every relevant case.
+- E5 improves Recall@6 over BM25/hash, but its top-hit accuracy is still limited by distractor and stale-evidence pressure.
+- The current hybrid weight does not beat BGE embedding-only, which is useful evidence that hybrid retrieval needs tuning rather than blind adoption.
+- OpenAI embeddings can be compared with the same harness when `OPENAI_API_KEY` is set:
+
+```bash
+python eval_retrieval_quality.py --embedding-models openai/text-embedding-3-small --json --export
+```
+
+Exported artifacts:
+- `results/retrieval_quality.json`
+- `results/retrieval_quality.csv`
+- `results/retrieval_quality_summary.csv`
+- `results/retrieval_confusion_heatmap.png`
+
 ---
 
 ## Evaluation
-This repo includes two evaluation paths:
+This repo includes three evaluation paths:
 
 ```bash
+python eval_retrieval_quality.py --json --export
 python eval_memory_quality.py --json --export
 python eval_model_answers.py --model openai/gpt-4o-mini --json --export
 python eval_model_answers.py --model google/gemini-3.1-flash-lite --strategies full_history,sliding_window,summary,adaptive --json --export
 ```
 
+`eval_retrieval_quality.py` measures retrieval quality before prompt assembly: Recall@K, Precision@K, MRR, distractor hit rate, stale evidence rate, and top-hit accuracy.
 `eval_memory_quality.py` is the article-oriented harness: it evaluates the context that each policy assembles before the LLM call.
 `eval_model_answers.py` is the optional live-model harness: it calls a real provider model and scores the generated answers for recall, conflict, abstention, token usage, cost, and latency.
 
@@ -278,6 +324,7 @@ Exported artifacts:
 - **FastAPI + Uvicorn** (API + local server)
 - **SQLite** (messages, summaries, pinned context, usage ledger, semantic memory vectors)
 - **OpenAI + Gemini + OpenRouter-compatible chat APIs** + **`mock/echo`** deterministic local mode
+- **Embedding backends**: deterministic `mock/hash`, optional sentence-transformers local models, OpenAI embeddings API
 - **tiktoken** token estimation (+ fallback)
 - **Matplotlib** benchmark chart export
 - **Chart.js** dashboard charts (CDN)
@@ -298,10 +345,20 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Add your OpenRouter key to `.env`:
+Optional local embedding backends:
+
+```bash
+pip install -r requirements-embeddings.txt
+```
+
+Add provider keys to `.env` as needed:
 
 ```text
 OPENROUTER_API_KEY=your_key_here
+OPENAI_API_KEY=your_key_here
+GEMINI_API_KEY=your_key_here
+EMBEDDING_MODEL=mock/hash
+RETRIEVAL_MODE=hybrid
 ```
 
 Run:
@@ -349,6 +406,7 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 - **Sliding window** is the cheapest because it caps context length (but it would forget older facts by design).
 - **Incremental summary** lands in between: it reduces long-history growth while paying **background summarization overhead** (tracked as `bg_input`/`bg_output`), which is why it is more expensive than a pure sliding window in this run.
 - **Adaptive context** is the strongest offline policy on the hardened memory-quality suite: `0.8688` mean quality with `78.71%` fewer context tokens than full history.
+- **Retrieval quality is now separately measurable**: BGE embedding-only reaches `1.0000` Recall@6 and `1.0000` top-hit accuracy, while the deterministic baseline exposes nonzero distractor and stale-evidence rates.
 - **Failure analysis matters**: adaptive still fails on noisy retrieval/entity-confusion cases and can carry stale summary evidence on recent overrides. That is the main research signal: cost reduction is easy, reliable memory selection is the hard part.
 
 
@@ -362,6 +420,7 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 ├── llm_utils.py             OpenRouter + mock provider, timeout/retry handling
 ├── database.py              SQLite persistence + usage ledger + memory vectors
 ├── benchmark.py             synthetic benchmark + JSON/CSV/PNG export
+├── eval_retrieval_quality.py retrieval ranking quality evaluation
 ├── eval_memory_quality.py   offline context-policy quality evaluation
 ├── eval_model_answers.py    live model-answer quality evaluation
 ├── index.html               dashboard UI (context preview + charts)
@@ -369,5 +428,6 @@ GET    /api/usage_timeseries/{session} per-day operation counts (e.g. summary)
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .github/workflows/test.yml
-└── requirements.txt
+├── requirements.txt
+└── requirements-embeddings.txt
 ```

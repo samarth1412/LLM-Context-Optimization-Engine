@@ -95,13 +95,20 @@ def init_database():
             role TEXT NOT NULL,
             content TEXT NOT NULL,
             vector_json TEXT NOT NULL,
+            embedding_model TEXT DEFAULT 'mock/hash',
+            vector_dim INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE
         )
         """
     )
+    _ensure_column(cursor, "memory_vectors", "embedding_model", "TEXT DEFAULT 'mock/hash'")
+    _ensure_column(cursor, "memory_vectors", "vector_dim", "INTEGER DEFAULT 0")
     cursor.execute(
         "CREATE INDEX IF NOT EXISTS idx_memory_session ON memory_vectors(session_id, message_id)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_memory_embedding ON memory_vectors(session_id, embedding_model)"
     )
 
     conn.commit()

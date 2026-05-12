@@ -6,7 +6,7 @@ import os
 import re
 import statistics
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Dict, List
 
 import context as context_engine
@@ -43,6 +43,9 @@ class MemoryCase:
     summary_facts: List[SummaryFact]
     required_terms: List[str]
     conflict_terms: List[str]
+    relevant_message_indices: List[int] = field(default_factory=list)
+    stale_message_indices: List[int] = field(default_factory=list)
+    distractor_message_indices: List[int] = field(default_factory=list)
     note: str = ""
 
 
@@ -98,6 +101,7 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["jasmine"],
             conflict_terms=[],
+            relevant_message_indices=[4],
             note="Early fact is outside the recent window.",
         ),
         MemoryCase(
@@ -117,6 +121,8 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["zed"],
             conflict_terms=["preferred editor used to be vim"],
+            relevant_message_indices=[58],
+            stale_message_indices=[6],
             note="Older stale fact is replaced before the recent window.",
         ),
         MemoryCase(
@@ -136,6 +142,7 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["zephyr", "dragonfly"],
             conflict_terms=[],
+            relevant_message_indices=[8, 50],
             note="Answer requires connecting codename and later brand fact.",
         ),
         MemoryCase(
@@ -146,6 +153,7 @@ def build_cases() -> List[MemoryCase]:
             summary_facts=[],
             required_terms=[],
             conflict_terms=["passport number is"],
+            relevant_message_indices=[],
             note="Correct behavior is to avoid inventing a missing private fact.",
         ),
         MemoryCase(
@@ -166,6 +174,8 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["teal"],
             conflict_terms=["amber", "deferred"],
+            relevant_message_indices=[6],
+            distractor_message_indices=[18, 38, 60],
             note="Lexical retrieval can pull high-overlap but irrelevant badge snippets.",
         ),
         MemoryCase(
@@ -186,6 +196,8 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["north"],
             conflict_terms=["south"],
+            relevant_message_indices=[10],
+            distractor_message_indices=[28, 52],
             note="Near-name entity collision tests whether context includes confusing neighbors.",
         ),
         MemoryCase(
@@ -204,6 +216,8 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["pagerduty"],
             conflict_terms=["escalation channel is email"],
+            relevant_message_indices=[88],
+            stale_message_indices=[8],
             note="Recent message overrides a stale summary fact.",
         ),
         MemoryCase(
@@ -222,6 +236,8 @@ def build_cases() -> List[MemoryCase]:
             ],
             required_terms=["audit logs"],
             conflict_terms=[],
+            relevant_message_indices=[12],
+            distractor_message_indices=[34],
             note="Simulates summary drift by omitting a critical early constraint.",
         ),
     ]
